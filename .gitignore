@@ -1,0 +1,86 @@
+# Secrets and environment-specific configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
+**/secrets.*
+
+# Python environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Node and Next.js
+node_modules/
+.next/
+out/
+.turbo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Tests and generated reports
+.cache/
+coverage/
+test-results/
+playwright-report/
+
+# Editors and operating systems
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Runtime logs and local databases
+*.log
+logs/
+*.db
+*.sqlite
+*.sqlite3
+
+# User uploads and generated evidence
+uploads/
+uploaded-images/
+evidence/
+detection-screenshots/
+artifacts/
+
+# Models and large binaries
+models/
+weights/
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.pb
+*.ckpt
+*.safetensors
+
+# Temporary media and files
+temp/
+tmp/
+*.tmp
+*.temp
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+

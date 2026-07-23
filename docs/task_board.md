@@ -1,0 +1,73 @@
+# Vehicle License Plate Recognition for Unauthorized Entry Alert
+
+## Task board
+
+**Project period:** July 23, 2026 through August 15, 2026  
+**Milestone owner:** Project developer (one active developer)  
+**Board rule:** Status reflects evidence, not intention.
+
+## Evidence required for Completed
+
+A task may move to Completed only when its scoped files exist, applicable verification commands have passed with recorded results, acceptance criteria are demonstrated, documentation reflects reality, and a diff/secret/generated-file review finds no unintended content. User-facing work also needs a recorded smoke test or screenshot; research needs sources, license/version details, fixture/method, and real raw results. A commit or PR is useful milestone evidence but is not required for Day 1 and must never be created without explicit approval.
+
+## Planned
+
+| Date | Milestone | Owner | Required evidence |
+|---|---|---|---|
+| Jul 24 | FastAPI foundation | Project developer | Clean setup, health test, backend tests |
+| Jul 25 | Secure image input | Project developer | Valid/invalid fixture tests |
+| Jul 26 | Detector evaluation | Project developer | License/source comparison and reproducible method |
+| Jul 27 | Still-image plate detection | Project developer | Box/crop and no-plate test evidence |
+| Jul 28 | Plate preprocessing | Project developer | Deterministic tests and visual variants |
+| Jul 29 | OCR evaluation | Project developer | Raw benchmark output; no invented metrics |
+| Jul 30 | OCR and normalization | Project developer | OCR contract and normalization tests |
+| Jul 31 | Supabase data design | Project developer | Schema validation and mock repository tests |
+| Aug 1 | Decision engine | Project developer | Tests for all three decisions and failures |
+| Aug 2 | Detection logging/evidence | Project developer | Storage/log mock integration tests |
+| Aug 3 | Frontend foundation | Project developer | Lint, type-check, build, responsive smoke test |
+| Aug 4 | Recognition interface | Project developer | Six result/error-state tests |
+| Aug 5 | Dashboard/history/alerts | Project developer | Filter/statistics tests and UI evidence |
+| Aug 6 | Authorized vehicles | Project developer | CRUD/status/decision integration evidence |
+| Aug 7 | Core integration freeze | Project developer | Repeated end-to-end image smoke tests |
+| Aug 8 | Optional bounded video | Project developer | Limit/duplicate tests or honest deferral |
+| Aug 9 | Local webcam demo | Project developer | Local start/stop/unavailable-camera evidence |
+| Aug 10 | Free-tier deployment | Project developer | Public health and image-flow timestamps |
+| Aug 11 | Reproducible evaluation | Project developer | Raw per-sample and regenerated aggregate output |
+| Aug 12 | Online QA/security | Project developer | Release checklist and secret/security review |
+| Aug 13 | UI/accessibility polish | Project developer | Checks/build and keyboard/responsive evidence |
+| Aug 14 | Deliverables/rehearsal | Project developer | Reconciled report, demo checklist, backup |
+| Aug 15 | Final verification/submission | Project developer | Full verification and deliverable checklist |
+
+## In Progress
+
+None.
+
+## Completed
+
+| Date | Task | Owner | Evidence |
+|---|---|---|---|
+| Jul 23 | Repository baseline inspected | Project developer | Status, branch, history, remotes, and file inventory captured |
+| Jul 23 | Scope and architecture documented | Project developer | `PROJECT.md` and `README.md` |
+| Jul 23 | Daily milestone plan documented | Project developer | `PROJECT_PLAN.md`, Jul 23–Aug 15 |
+| Jul 23 | Task board and repository hygiene prepared | Project developer | This board, `.gitignore`, `.env.example`, and tracked empty directories |
+
+## Blocked
+
+None.
+
+## Backlog
+
+- Browser-mediated camera capture (distinct from direct OpenCV access).
+- Continuous CCTV/IP-camera streaming.
+- Gate/barrier hardware integration.
+- Broader plate-region training and production-scale monitoring.
+- Advanced charts, animations, and nonessential UI customization.
+
+## Git policy
+
+- `main` contains only reviewed, working milestones.
+- Use one coherent milestone per branch, created from the latest `main`.
+- Test and verify before moving work to Completed.
+- Multiple milestones may finish on one real day; never alter commit dates.
+- Never automatically merge a Pull Request into `main`.
+- Do not commit, push, merge, or delete branches without explicit approval.
