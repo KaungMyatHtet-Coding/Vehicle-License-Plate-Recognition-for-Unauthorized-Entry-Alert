@@ -48,11 +48,19 @@ Empty directories currently contain `.gitkeep` placeholders only.
 
 Development will proceed as reviewed milestones: backend input and recognition pipeline, Supabase persistence, frontend workflows, integration, then evaluation/deployment hardening. The Next.js frontend is planned for Vercel Free, FastAPI for Render Free, and PostgreSQL/private evidence storage for Supabase Free. Environment-specific secrets remain outside Git; only placeholder variable names appear in `.env.example`.
 
-Setup and execution commands will be added when implementation begins. Day 1 intentionally installs no dependencies, creates no virtual environment, and scaffolds neither FastAPI nor Next.js.
+Day 2 now includes a minimal FastAPI foundation. Windows PowerShell setup,
+Uvicorn, health, Swagger, and test commands are documented in
+[backend/README.md](backend/README.md). Day 2 does not implement CV, OCR,
+authorization, persistence, uploads, frontend features, or deployment.
 
 ## Current status
 
-**Day 1 — planning only (July 23, 2026):** repository scope, architecture, schedule, task board, safe ignore policy, environment template, and empty folder structure are prepared. All implementation milestones remain Planned. Deadline: **August 15, 2026**.
+**Day 2 — backend foundation (July 24, 2026):** planning is complete and a
+minimal tested FastAPI shell provides API information, canonical `GET /health`
+(with a documented compatibility alias at `/api/health`), safe
+development configuration, structured validation errors, and local setup
+documentation. Day 3 and later milestones remain Planned. Deadline:
+**August 15, 2026**.
 
 ## Documentation
 
@@ -63,4 +71,3 @@ Setup and execution commands will be added when implementation begins. Day 1 int
 ## Git policy
 
 `main` contains only reviewed, working milestones. Use one coherent milestone per branch and start from the latest `main`. Test before marking Completed. Multiple milestones may finish on one real day, but commit dates must never be altered. Do not automatically merge Pull Requests, and do not commit, push, merge, or delete branches without explicit approval.
-
