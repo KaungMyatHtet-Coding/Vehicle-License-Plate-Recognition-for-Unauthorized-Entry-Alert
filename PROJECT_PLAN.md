@@ -91,6 +91,8 @@ python -m pytest backend\tests
 **Acceptance/evidence:** Valid fixtures pass; empty, disguised, corrupt, unsupported, and oversized fixtures return safe documented errors.  
 **Recommended commit:** `feat: add secure image input validation`
 
+**Day 3 status:** Completed on July 25, 2026 on `feat/image-input-validation`. Evidence: 15 backend tests, Pillow decoded-content checks, bounded in-memory reads, JPEG/PNG valid and invalid-input cases, Ruff lint/format, Python compilation, and local endpoint smoke tests. The validation-only endpoint returns metadata and does not detect, recognize, authorize, or persist anything.
+
 ### Day 4 — July 26, 2026 — Plate-detector evaluation
 
 **Branch:** `research/plate-detector`  
