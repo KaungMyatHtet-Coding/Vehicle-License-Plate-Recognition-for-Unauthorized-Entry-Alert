@@ -70,6 +70,8 @@ python -m pytest backend\tests
 **Acceptance/evidence:** Clean install works, health response is documented, tests pass, and no CV/OCR/database logic is included.  
 **Recommended commit:** `feat: establish FastAPI backend foundation`
 
+**Day 2 status:** Completed on July 24, 2026 on `feat/backend-foundation`. Evidence: Python 3.12 virtual environment, dependency installation, endpoint tests including canonical `/health`, Ruff lint/format checks, Python compilation, local Uvicorn health response, and `/docs` HTTP 200 smoke test. No implementation beyond the backend foundation was added.
+
 ### Day 3 — July 25, 2026 — Secure image input
 
 **Branch:** `feat/image-input-validation`  
@@ -533,4 +535,3 @@ If Day 16 is unstable, postpone P2. Short video and webcam must never delay the 
 | Optional scope threatens core | Freeze P0 on August 7 | Drop video, then webcam |
 | Network fails at presentation | Rehearse local path | Recorded demo and local fixtures |
 | Sensitive plate/evidence exposure | Private storage, minimal retention, access control | Disable evidence sharing and document incident |
-
