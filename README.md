@@ -48,18 +48,18 @@ Empty directories currently contain `.gitkeep` placeholders only.
 
 Development will proceed as reviewed milestones: backend input and recognition pipeline, Supabase persistence, frontend workflows, integration, then evaluation/deployment hardening. The Next.js frontend is planned for Vercel Free, FastAPI for Render Free, and PostgreSQL/private evidence storage for Supabase Free. Environment-specific secrets remain outside Git; only placeholder variable names appear in `.env.example`.
 
-Day 2 now includes a minimal FastAPI foundation. Windows PowerShell setup,
-Uvicorn, health, Swagger, and test commands are documented in
-[backend/README.md](backend/README.md). Day 2 does not implement CV, OCR,
-authorization, persistence, uploads, frontend features, or deployment.
+Day 2 includes a minimal FastAPI foundation and Day 3 adds transient image-input
+validation. Windows PowerShell setup, Uvicorn, health, Swagger, validation,
+and test commands are documented in [backend/README.md](backend/README.md).
+CV, OCR, authorization, persistence, frontend features, and deployment remain
+unimplemented.
 
 ## Current status
 
-**Day 2 — backend foundation (July 24, 2026):** planning is complete and a
-minimal tested FastAPI shell provides API information, canonical `GET /health`
-(with a documented compatibility alias at `/api/health`), safe
-development configuration, structured validation errors, and local setup
-documentation. Day 3 and later milestones remain Planned. Deadline:
+**Day 3 — secure image input (July 25, 2026):** the tested FastAPI shell now
+also validates bounded JPEG/PNG multipart input in memory, verifies decoded
+content and dimensions, returns safe metadata, and rejects invalid input with
+structured errors. Day 4 and later milestones remain Planned. Deadline:
 **August 15, 2026**.
 
 ## Documentation

@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     """Safe development settings; external services are not required."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=("backend/.env", ".env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
@@ -30,6 +30,16 @@ class Settings(BaseSettings):
     app_host: str = Field(default="127.0.0.1", validation_alias="APP_HOST")
     app_port: int = Field(default=8000, validation_alias="APP_PORT")
     log_level: str = Field(default="INFO", validation_alias="LOG_LEVEL")
+    max_image_bytes: int = Field(
+        default=10 * 1024 * 1024, validation_alias="MAX_IMAGE_BYTES"
+    )
+    min_image_width: int = Field(default=32, validation_alias="MIN_IMAGE_WIDTH")
+    min_image_height: int = Field(default=32, validation_alias="MIN_IMAGE_HEIGHT")
+    max_image_width: int = Field(default=10_000, validation_alias="MAX_IMAGE_WIDTH")
+    max_image_height: int = Field(default=10_000, validation_alias="MAX_IMAGE_HEIGHT")
+    max_image_pixels: int = Field(
+        default=25_000_000, validation_alias="MAX_IMAGE_PIXELS"
+    )
     frontend_origins: Annotated[list[str], NoDecode] = Field(
         default=["http://localhost:3000"], validation_alias="FRONTEND_ORIGINS"
     )

@@ -1,1 +1,1 @@
-"""Pydantic schemas will be added with later API milestones."""
+"""Pydantic schemas for backend API boundaries."""

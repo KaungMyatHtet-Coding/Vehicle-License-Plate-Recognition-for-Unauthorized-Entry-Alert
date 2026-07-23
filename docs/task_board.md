@@ -14,7 +14,6 @@ A task may move to Completed only when its scoped files exist, applicable verifi
 
 | Date | Milestone | Owner | Required evidence |
 |---|---|---|---|
-| Jul 25 | Secure image input | Project developer | Valid/invalid fixture tests |
 | Jul 26 | Detector evaluation | Project developer | License/source comparison and reproducible method |
 | Jul 27 | Still-image plate detection | Project developer | Box/crop and no-plate test evidence |
 | Jul 28 | Plate preprocessing | Project developer | Deterministic tests and visual variants |
@@ -50,6 +49,7 @@ None.
 | Jul 23 | Daily milestone plan documented | Project developer | `PROJECT_PLAN.md`, Jul 23–Aug 15 |
 | Jul 23 | Task board and repository hygiene prepared | Project developer | This board, `.gitignore`, `.env.example`, and tracked empty directories |
 | Jul 24 | FastAPI foundation | Project developer | `py -3.12`, dependency install, endpoint tests including canonical `/health`, Ruff lint/format, compileall, local health JSON, `/docs` HTTP 200; commit pending approval |
+| Jul 25 | Secure image input | Project developer | 15 pytest passes; JPEG/PNG, empty, unsupported, spoofed, mismatched, truncated, oversized, and dimension tests; Ruff, format, compileall, and endpoint smoke checks; commit pending approval |
 
 ## Blocked
 
