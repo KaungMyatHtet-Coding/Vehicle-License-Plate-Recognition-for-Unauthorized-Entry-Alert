@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "measurement_class": "locally measured",
+  "command_backend": "contour",
+  "input": "sample-data/evaluation",
+  "contract_version": 1,
+  "iou_threshold": 0.5,
+  "environment": {
+    "python": "3.12.0",
+    "platform": "Windows-11-10.0.22000-SP0",
+    "opencv": "4.12.0",
+    "onnxruntime": "1.26.0"
+  },
+  "runtime": {},
+  "summary": {
+    "fixtures": 4,
+    "valid_fixtures": 2,
+    "invalid_fixtures": 2,
+    "errors": 0,
+    "total_detections": 1,
+    "average_latency_ms": 9.674
+  },
+  "results": [
+    {
+      "file": "synthetic_plate_white.png",
+      "backend": "contour",
+      "expected_detections": 1,
+      "detections": [],
+      "latency_ms": 13.161,
+      "best_iou_by_ground_truth": [
+        0.0
+      ],
+      "valid": false,
+      "error": null
+    },
+    {
+      "file": "synthetic_plate_yellow.png",
+      "backend": "contour",
+      "expected_detections": 1,
+      "detections": [
+        {
+          "bbox": [
+            202,
+            342,
+            419,
+            394
+          ],
+          "confidence": 0.942,
+          "label": "plate_candidate"
+        }
+      ],
+      "latency_ms": 6.078,
+      "best_iou_by_ground_truth": [
+        0.932562
+      ],
+      "valid": true,
+      "error": null
+    },
+    {
+      "file": "synthetic_no_plate.png",
+      "backend": "contour",
+      "expected_detections": 0,
+      "detections": [],
+      "latency_ms": 9.9,
+      "best_iou_by_ground_truth": [],
+      "valid": true,
+      "error": null
+    },
+    {
+      "file": "synthetic_multi_plate.png",
+      "backend": "contour",
+      "expected_detections": 2,
+      "detections": [],
+      "latency_ms": 9.556,
+      "best_iou_by_ground_truth": [
+        0.0,
+        0.0
+      ],
+      "valid": false,
+      "error": null
+    }
+  ]
+}

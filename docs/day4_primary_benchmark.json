@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "measurement_class": "locally measured",
+  "command_backend": "onnx",
+  "input": "sample-data/evaluation",
+  "contract_version": 1,
+  "iou_threshold": 0.5,
+  "environment": {
+    "python": "3.12.0",
+    "platform": "Windows-11-10.0.22000-SP0",
+    "opencv": "4.12.0",
+    "onnxruntime": "1.26.0"
+  },
+  "runtime": {
+    "artifact_size_bytes": 12265233,
+    "artifact_sha256": "a599289e5c25ab693fd7c6a152093f95fc34aef9b59b2c798127173e6e7ba2d9",
+    "onnxruntime": "1.26.0",
+    "providers": [
+      "CPUExecutionProvider"
+    ],
+    "input": {
+      "name": "images",
+      "shape": [
+        1,
+        3,
+        640,
+        640
+      ],
+      "type": "tensor(float)",
+      "layout": "NCHW"
+    },
+    "outputs": [
+      {
+        "name": "output0",
+        "shape": [
+          1,
+          5,
+          8400
+        ],
+        "type": "tensor(float)",
+        "layout": "[batch, x_center/y_center/width/height/class0, anchors]"
+      }
+    ],
+    "class_mapping": {
+      "0": "license_plate"
+    },
+    "export": {
+      "ultralytics_version": "8.4.56",
+      "opset": 12,
+      "nms_embedded": false
+    },
+    "preprocessing": {
+      "color": "BGR to RGB",
+      "letterbox": "640x640, value 114, stride 32",
+      "dtype": "float32",
+      "normalization": "divide uint8 values by 255"
+    },
+    "postprocessing": {
+      "confidence_threshold": 0.25,
+      "nms_iou_threshold": 0.45,
+      "raw_box_format": "cxcywh in 640x640 letterboxed pixels",
+      "output_box_format": "clipped original-image xyxy"
+    },
+    "model_load_latency_ms": 96.485,
+    "rss_before_load_mb": 52.203,
+    "rss_after_load_mb": 72.82,
+    "max_observed_rss_mb": 131.266,
+    "memory_measurement": "Windows process working set sampled before load, after load, and after each inference; not a continuous peak measurement"
+  },
+  "summary": {
+    "fixtures": 4,
+    "valid_fixtures": 4,
+    "invalid_fixtures": 0,
+    "errors": 0,
+    "total_detections": 4,
+    "average_latency_ms": 100.064
+  },
+  "results": [
+    {
+      "file": "synthetic_plate_white.png",
+      "backend": "onnx",
+      "expected_detections": 1,
+      "detections": [
+        {
+          "bbox": [
+            213,
+            320,
+            426,
+            371
+          ],
+          "confidence": 0.6071255207061768,
+          "label": "license_plate"
+        }
+      ],
+      "latency_ms": 100.057,
+      "best_iou_by_ground_truth": [
+        0.920556
+      ],
+      "valid": true,
+      "error": null
+    },
+    {
+      "file": "synthetic_plate_yellow.png",
+      "backend": "onnx",
+      "expected_detections": 1,
+      "detections": [
+        {
+          "bbox": [
+            190,
+            340,
+            426,
+            394
+          ],
+          "confidence": 0.4165407419204712,
+          "label": "license_plate"
+        }
+      ],
+      "latency_ms": 104.412,
+      "best_iou_by_ground_truth": [
+        0.916384
+      ],
+      "valid": true,
+      "error": null
+    },
+    {
+      "file": "synthetic_no_plate.png",
+      "backend": "onnx",
+      "expected_detections": 0,
+      "detections": [],
+      "latency_ms": 93.974,
+      "best_iou_by_ground_truth": [],
+      "valid": true,
+      "error": null
+    },
+    {
+      "file": "synthetic_multi_plate.png",
+      "backend": "onnx",
+      "expected_detections": 2,
+      "detections": [
+        {
+          "bbox": [
+            518,
+            341,
+            700,
+            386
+          ],
+          "confidence": 0.8206875324249268,
+          "label": "license_plate"
+        },
+        {
+          "bbox": [
+            118,
+            340,
+            299,
+            387
+          ],
+          "confidence": 0.8054701685905457,
+          "label": "license_plate"
+        }
+      ],
+      "latency_ms": 101.813,
+      "best_iou_by_ground_truth": [
+        0.941885,
+        0.946237
+      ],
+      "valid": true,
+      "error": null
+    }
+  ]
+}

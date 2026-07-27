@@ -112,6 +112,8 @@ python -m pytest tests -k detector_contract
 **Acceptance/evidence:** Reproducible comparison and license/source notes exist; selection is evidence-based; any unavailable benchmark is explicitly recorded.  
 **Recommended commit:** `docs: select free plate detection approach`
 
+**Day 4 status:** Completed on July 28, 2026 on `research/plate-detector`. Primary: plate-specific `joker5914/yolov8n-license-plate` ONNX at immutable revision `8286762929bd4b111a19186f2a05e0a5940b6088`; the uploader's AGPL-3.0 weights declaration, dataset publisher's CC BY 4.0 declaration, and ONNX Runtime's MIT license are documented separately. The ignored artifact matched its published size/SHA-256, loaded with CPUExecutionProvider, and exposed the documented `[1,3,640,640]` to `[1,5,8400]` contract. The Day 4 research adapter validated 4/4 generated fixtures at 100.064 ms mean latency and 131.266 MB maximum sampled process RSS; these are synthetic/local results, not real-world or Render claims. Fallback: local OpenCV contour baseline, explicitly labeled heuristic, which honestly fails 2/4 fixtures and exits non-zero. Evidence: 53 detector-contract tests and 15 backend regression tests passed in the project environment; Ruff lint/format, syntax/import, and API smoke checks passed; no weights are committed.
+
 ### Day 5 — July 27, 2026 — Still-image plate detection
 
 **Branch:** `feat/plate-detection`  
