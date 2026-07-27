@@ -14,7 +14,6 @@ A task may move to Completed only when its scoped files exist, applicable verifi
 
 | Date | Milestone | Owner | Required evidence |
 |---|---|---|---|
-| Jul 26 | Detector evaluation | Project developer | License/source comparison and reproducible method |
 | Jul 27 | Still-image plate detection | Project developer | Box/crop and no-plate test evidence |
 | Jul 28 | Plate preprocessing | Project developer | Deterministic tests and visual variants |
 | Jul 29 | OCR evaluation | Project developer | Raw benchmark output; no invented metrics |
@@ -50,6 +49,7 @@ None.
 | Jul 23 | Task board and repository hygiene prepared | Project developer | This board, `.gitignore`, `.env.example`, and tracked empty directories |
 | Jul 24 | FastAPI foundation | Project developer | `py -3.12`, dependency install, endpoint tests including canonical `/health`, Ruff lint/format, compileall, local health JSON, `/docs` HTTP 200; commit pending approval |
 | Jul 25 | Secure image input | Project developer | 15 pytest passes; JPEG/PNG, empty, unsupported, spoofed, mismatched, truncated, oversized, and dimension tests; Ruff, format, compileall, and endpoint smoke checks; commit pending approval |
+| Jul 28 | Plate-detector evaluation | Project developer | Immutable plate-specific ONNX artifact size/SHA verified; uploader/runtime/dataset license declarations kept separate with attribution; CPU tensor and decoding contract inspected; primary 4/4 generated fixtures at 100.064 ms mean and 131.266 MB maximum sampled RSS; contour fallback fails 2/4 honestly; 53 contract and 15 regression tests; no weights committed |
 
 ## Blocked
 

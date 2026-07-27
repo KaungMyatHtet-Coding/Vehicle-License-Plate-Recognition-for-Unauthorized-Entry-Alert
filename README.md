@@ -42,16 +42,20 @@ PROJECT.md     requirements, architecture, scope, and decisions
 PROJECT_PLAN.md daily milestone schedule
 ```
 
-Empty directories currently contain `.gitkeep` placeholders only.
+Directories that have not reached their milestone contain `.gitkeep`
+placeholders; Day 4 adds only its research, benchmark, test, and generated
+fixture artifacts.
 
 ## Development and deployment overview
 
 Development will proceed as reviewed milestones: backend input and recognition pipeline, Supabase persistence, frontend workflows, integration, then evaluation/deployment hardening. The Next.js frontend is planned for Vercel Free, FastAPI for Render Free, and PostgreSQL/private evidence storage for Supabase Free. Environment-specific secrets remain outside Git; only placeholder variable names appear in `.env.example`.
 
 Day 2 includes a minimal FastAPI foundation and Day 3 adds transient image-input
-validation. Windows PowerShell setup, Uvicorn, health, Swagger, validation,
-and test commands are documented in [backend/README.md](backend/README.md).
-CV, OCR, authorization, persistence, frontend features, and deployment remain
+validation. Day 4 evaluates an exact plate-specific detector and a lightweight
+fallback without integrating either into the API. Windows PowerShell setup,
+Uvicorn, health, Swagger, validation, and test commands are documented in
+[backend/README.md](backend/README.md). Detector integration, OCR,
+authorization, persistence, frontend features, and deployment remain
 unimplemented.
 
 ## Current status
@@ -59,8 +63,16 @@ unimplemented.
 **Day 3 — secure image input (July 25, 2026):** the tested FastAPI shell now
 also validates bounded JPEG/PNG multipart input in memory, verifies decoded
 content and dimensions, returns safe metadata, and rejects invalid input with
-structured errors. Day 4 and later milestones remain Planned. Deadline:
-**August 15, 2026**.
+structured errors.
+
+**Day 4 — plate-detector evaluation:** Completed on July 28, 2026 on
+`research/plate-detector`. The research identifies one immutable
+plate-specific ONNX candidate with separate weights/runtime/dataset licensing,
+locally verifies its checksum, CPU tensor/decoding contract, and generated
+fixture results, defines a versioned bbox contract, and retains honest primary
+and fallback raw results. The ignored verification weight is not committed and
+the API detector is not integrated. Day 5 and later milestones remain Planned.
+Deadline: **August 15, 2026**.
 
 ## Documentation
 
