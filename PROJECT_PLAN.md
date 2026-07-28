@@ -162,6 +162,16 @@ python -m pytest backend\tests -k preprocessing
 **Acceptance/evidence:** Deterministic shape/type tests pass, original crops remain unchanged, and visual examples document useful variants.  
 **Recommended commit:** `feat: add configurable plate preprocessing`
 
+**Day 6 status:** Completed on July 29, 2026 on
+`feat/plate-preprocessing`. Evidence: a non-destructive service produces only
+explicitly selected grayscale, aspect-preserving resize, bilateral denoise,
+CLAHE contrast, Otsu threshold, deskew, and perspective variants from the
+unchanged Day 5 crop. It returns original/stage shape and type metadata plus
+per-stage and total timings. Focused deterministic tests cover shapes, types,
+independent stages, preservation, optional geometry, safe bounds, and failure
+codes. A reproducible contact sheet uses the generated legal fixture. No OCR
+or Day 7 work is included.
+
 ### Day 7 — July 29, 2026 — OCR evaluation
 
 **Branch:** `research/ocr-baseline`  
