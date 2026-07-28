@@ -2,11 +2,11 @@
 
 ## Backend foundation
 
-This directory contains the Day 2 FastAPI backend foundation plus the Day 3
-transient image-input validation boundary. It validates image bytes and
-returns metadata only; plate detection, OCR, authorization, persistent upload
-storage, and deployment are later milestones and are intentionally not
-implemented here.
+This directory contains the Day 2 FastAPI foundation, Day 3 transient
+image-input validation, and the Day 5 still-image plate-detection service. It
+validates image bytes, locates zero/one/multiple plates, and returns transient
+lossless crops. Plate preprocessing, OCR, authorization, persistent upload
+storage, and deployment are later milestones and are intentionally absent.
 
 ## Image validation
 
@@ -26,6 +26,39 @@ stable code, safe message, and correlation ID. These format and limit values
 are Day 3 development assumptions because the project plan specifies the
 validation categories but not exact values; they are configurable through the
 backend environment example.
+
+## Still-image plate detection
+
+`POST /api/recognition/detect-plates` accepts the same `file` field and runs
+the complete secure JPEG/PNG validation flow before detection. Configure the
+ignored, locally verified Day 4 artifact through:
+
+```text
+DETECTOR_MODEL_PATH=models/day4/best.onnx
+DETECTOR_CONFIDENCE_THRESHOLD=0.25
+DETECTOR_NMS_IOU_THRESHOLD=0.45
+```
+
+The model path is environment-based; no model weight is tracked. The service
+validates the selected artifact size/SHA and tensor/class contract, explicitly
+requests ONNX Runtime `CPUExecutionProvider`, and initializes lazily on the
+first detection request. The initialized detector is reused rather than
+reloaded per request. Ordinary imports, `/health`, `/api/health`, and
+`validate-image` therefore work without a local model.
+
+A successful response contains the correlation ID, `detected` or
+`no_plate_detected` status, count, original dimensions, inference/total
+milliseconds, and confidence-sorted detections. Each bbox is original-image
+`x1,y1,x2,y2` with exclusive right/bottom edges. Each crop is copied from the
+original decoded pixels and transported as lossless base64 PNG with dimensions.
+No upload or crop is persisted. Optional debug observation exists only as an
+injected service sink; the application configures none and writes no debug
+files.
+
+Missing configuration/model files, failed artifact validation, unloadable
+models, contract mismatches, and inference failures return HTTP 503 with a
+stable structured code, safe message, and correlation ID. Invalid input keeps
+the Day 3 status/code behavior.
 
 ## Windows PowerShell setup
 
@@ -59,6 +92,7 @@ Validate a local image from the repository root:
 
 ```powershell
 curl.exe -X POST http://127.0.0.1:8000/api/recognition/validate-image -F "file=@sample.jpg"
+curl.exe -X POST http://127.0.0.1:8000/api/recognition/detect-plates -F "file=@sample.jpg"
 ```
 
 Run tests from the repository root:
@@ -67,8 +101,9 @@ Run tests from the repository root:
 python -m pytest backend\tests
 ```
 
-The Day 3 validation tests generate tiny JPEG/PNG images in memory and require
-no downloaded fixtures.
+The Day 3 validation tests generate tiny JPEG/PNG images in memory. Day 5
+unit tests require no model; when the ignored verified Day 4 artifact is
+present, the focused suite also exercises all generated evaluation fixtures.
 
 Alternatively, commands may be run from inside `backend\` after activating
 the environment; in that case use `python -m uvicorn app.main:app` and

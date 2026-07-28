@@ -1,6 +1,7 @@
 """Environment-based settings for the backend foundation."""
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated
 
 from pydantic import Field
@@ -39,6 +40,15 @@ class Settings(BaseSettings):
     max_image_height: int = Field(default=10_000, validation_alias="MAX_IMAGE_HEIGHT")
     max_image_pixels: int = Field(
         default=25_000_000, validation_alias="MAX_IMAGE_PIXELS"
+    )
+    detector_model_path: Path | None = Field(
+        default=None, validation_alias="DETECTOR_MODEL_PATH"
+    )
+    detector_confidence_threshold: float = Field(
+        default=0.25, ge=0.0, le=1.0, validation_alias="DETECTOR_CONFIDENCE_THRESHOLD"
+    )
+    detector_nms_iou_threshold: float = Field(
+        default=0.45, ge=0.0, le=1.0, validation_alias="DETECTOR_NMS_IOU_THRESHOLD"
     )
     frontend_origins: Annotated[list[str], NoDecode] = Field(
         default=["http://localhost:3000"], validation_alias="FRONTEND_ORIGINS"

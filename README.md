@@ -43,18 +43,19 @@ PROJECT_PLAN.md daily milestone schedule
 ```
 
 Directories that have not reached their milestone contain `.gitkeep`
-placeholders; Day 4 adds only its research, benchmark, test, and generated
-fixture artifacts.
+placeholders. Day 4 added research/benchmark evidence; Day 5 integrates only
+still-image localization and crop extraction.
 
 ## Development and deployment overview
 
 Development will proceed as reviewed milestones: backend input and recognition pipeline, Supabase persistence, frontend workflows, integration, then evaluation/deployment hardening. The Next.js frontend is planned for Vercel Free, FastAPI for Render Free, and PostgreSQL/private evidence storage for Supabase Free. Environment-specific secrets remain outside Git; only placeholder variable names appear in `.env.example`.
 
-Day 2 includes a minimal FastAPI foundation and Day 3 adds transient image-input
-validation. Day 4 evaluates an exact plate-specific detector and a lightweight
-fallback without integrating either into the API. Windows PowerShell setup,
-Uvicorn, health, Swagger, validation, and test commands are documented in
-[backend/README.md](backend/README.md). Detector integration, OCR,
+Day 2 includes a minimal FastAPI foundation, Day 3 adds transient image-input
+validation, Day 4 selects and verifies an exact plate-specific ONNX detector,
+and Day 5 integrates it as a lazy CPU service that returns bounded boxes,
+confidence, timings, and lossless transient crops. Windows PowerShell setup,
+model configuration, API contracts, and test commands are documented in
+[backend/README.md](backend/README.md). Plate preprocessing, OCR,
 authorization, persistence, frontend features, and deployment remain
 unimplemented.
 
@@ -71,7 +72,14 @@ plate-specific ONNX candidate with separate weights/runtime/dataset licensing,
 locally verifies its checksum, CPU tensor/decoding contract, and generated
 fixture results, defines a versioned bbox contract, and retains honest primary
 and fallback raw results. The ignored verification weight is not committed and
-the API detector is not integrated. Day 5 and later milestones remain Planned.
+the API detector was not integrated during research.
+
+**Day 5 — still-image plate detection:** Completed on July 29, 2026 on
+`feat/plate-detection`. The backend now reuses the Day 4 contract/decoding
+behavior, lazily loads the configured verified ONNX model once with CPU
+execution, returns zero/one/multiple bounded detections and lossless in-memory
+PNG crops, and reports structured model failures. Existing health and
+validation routes remain unchanged. Day 6 and later milestones remain Planned.
 Deadline: **August 15, 2026**.
 
 ## Documentation
