@@ -14,7 +14,6 @@ A task may move to Completed only when its scoped files exist, applicable verifi
 
 | Date | Milestone | Owner | Required evidence |
 |---|---|---|---|
-| Jul 28 | Plate preprocessing | Project developer | Deterministic tests and visual variants |
 | Jul 29 | OCR evaluation | Project developer | Raw benchmark output; no invented metrics |
 | Jul 30 | OCR and normalization | Project developer | OCR contract and normalization tests |
 | Jul 31 | Supabase data design | Project developer | Schema validation and mock repository tests |
@@ -50,6 +49,7 @@ None.
 | Jul 25 | Secure image input | Project developer | 15 pytest passes; JPEG/PNG, empty, unsupported, spoofed, mismatched, truncated, oversized, and dimension tests; Ruff, format, compileall, and endpoint smoke checks; commit pending approval |
 | Jul 28 | Plate-detector evaluation | Project developer | Immutable plate-specific ONNX artifact size/SHA verified; uploader/runtime/dataset license declarations kept separate with attribution; CPU tensor and decoding contract inspected; primary 4/4 generated fixtures at 100.064 ms mean and 131.266 MB maximum sampled RSS; contour fallback fails 2/4 honestly; 53 contract and 15 regression tests; no weights committed |
 | Jul 29 | Still-image plate detection | Project developer | Lazy ONNX Runtime CPU lifecycle; shared Day 4 bbox contract; four generated fixtures return expected counts and valid crops; safe zero/multiple and structured missing/invalid/unloadable-model tests; health/image-validation regressions retained; no weights committed |
+| Jul 29 | Plate preprocessing | Project developer | Non-destructive configurable grayscale/resize/denoise/contrast/threshold/deskew/perspective service; deterministic shape/type, preservation, independent-stage, geometry, bound, and error tests; reproducible legal-fixture contact sheet; no OCR |
 
 ## Blocked
 

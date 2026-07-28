@@ -5,8 +5,9 @@
 This directory contains the Day 2 FastAPI foundation, Day 3 transient
 image-input validation, and the Day 5 still-image plate-detection service. It
 validates image bytes, locates zero/one/multiple plates, and returns transient
-lossless crops. Plate preprocessing, OCR, authorization, persistent upload
-storage, and deployment are later milestones and are intentionally absent.
+lossless crops. Day 6 adds configurable non-destructive preprocessing. OCR,
+authorization, persistent upload storage, and deployment are later milestones
+and are intentionally absent.
 
 ## Image validation
 
@@ -60,6 +61,25 @@ models, contract mismatches, and inference failures return HTTP 503 with a
 stable structured code, safe message, and correlation ID. Invalid input keeps
 the Day 3 status/code behavior.
 
+## Plate preprocessing
+
+`PlatePreprocessingService` accepts a Day 5 `uint8` grayscale or BGR crop and
+an explicit `PreprocessingOptions` selection. Supported independent variants
+are grayscale, aspect-preserving resize, bilateral denoise, CLAHE contrast,
+Otsu threshold, deskew, and perspective correction. An empty selection returns
+only a copied original, so there is no unconditional transformation chain.
+
+The result preserves the original crop and returns original/stage dimensions,
+channel count, dtype, parameters, per-stage milliseconds, and total
+milliseconds. Deskew requires an explicit bounded angle. Perspective correction
+requires explicit in-crop corners and a bounded output size; Day 6 does not
+attempt unverified automatic geometry estimation.
+
+The existing HTTP routes and response contracts are unchanged. This service is
+the internal crop-to-variant boundary for later OCR work. See
+[`docs/plate_preprocessing.md`](../docs/plate_preprocessing.md) for the exact
+contract, legal-fixture visual example, limitations, and regeneration command.
+
 ## Windows PowerShell setup
 
 Run these commands from the repository root (`D:\CVPX`):
@@ -104,6 +124,8 @@ python -m pytest backend\tests
 The Day 3 validation tests generate tiny JPEG/PNG images in memory. Day 5
 unit tests require no model; when the ignored verified Day 4 artifact is
 present, the focused suite also exercises all generated evaluation fixtures.
+Day 6 preprocessing tests require no model and use deterministic in-memory
+arrays.
 
 Alternatively, commands may be run from inside `backend\` after activating
 the environment; in that case use `python -m uvicorn app.main:app` and

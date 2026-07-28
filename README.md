@@ -43,8 +43,9 @@ PROJECT_PLAN.md daily milestone schedule
 ```
 
 Directories that have not reached their milestone contain `.gitkeep`
-placeholders. Day 4 added research/benchmark evidence; Day 5 integrates only
-still-image localization and crop extraction.
+placeholders. Day 4 added research/benchmark evidence, Day 5 integrates
+still-image localization and crop extraction, and Day 6 adds configurable
+non-destructive crop variants.
 
 ## Development and deployment overview
 
@@ -55,9 +56,10 @@ validation, Day 4 selects and verifies an exact plate-specific ONNX detector,
 and Day 5 integrates it as a lazy CPU service that returns bounded boxes,
 confidence, timings, and lossless transient crops. Windows PowerShell setup,
 model configuration, API contracts, and test commands are documented in
-[backend/README.md](backend/README.md). Plate preprocessing, OCR,
-authorization, persistence, frontend features, and deployment remain
-unimplemented.
+[backend/README.md](backend/README.md). Day 6 adds independently selectable
+grayscale, resize, denoise, contrast, threshold, deskew, and perspective
+variants without changing the detection API. OCR, authorization, persistence,
+frontend features, and deployment remain unimplemented.
 
 ## Current status
 
@@ -79,7 +81,13 @@ the API detector was not integrated during research.
 behavior, lazily loads the configured verified ONNX model once with CPU
 execution, returns zero/one/multiple bounded detections and lossless in-memory
 PNG crops, and reports structured model failures. Existing health and
-validation routes remain unchanged. Day 6 and later milestones remain Planned.
+validation routes remain unchanged.
+
+**Day 6 — plate preprocessing:** Completed on July 29, 2026 on
+`feat/plate-preprocessing`. The backend now produces explicitly configured,
+independent OCR-ready variants from preserved Day 5 crops with shape/type
+metadata and timings. Deterministic tests and a generated legal-fixture contact
+sheet document the behavior. Day 7 and later milestones remain Planned.
 Deadline: **August 15, 2026**.
 
 ## Documentation
