@@ -133,6 +133,17 @@ python scripts\benchmark_detector.py --input sample-data\evaluation
 **Acceptance/evidence:** Known fixtures return valid boxes/crops, no-plate images return a safe outcome, and failure cases are recorded.  
 **Recommended commit:** `feat: add still-image plate detection`
 
+**Day 5 status:** Completed on July 29, 2026 on `feat/plate-detection`.
+Evidence: the selected checksum-verified ONNX model loads lazily once per
+application process with `CPUExecutionProvider`; the shared Day 4 contract,
+letterbox coordinate mapping, confidence/NMS, lossless transient PNG crops,
+timings, and safe zero/one/multiple results are integrated behind
+`POST /api/recognition/detect-plates`. Missing, invalid, unloadable, and runtime
+model failures return structured errors without making health, imports, or
+image validation depend on a local weight. The four generated Day 4 fixtures
+return their expected counts and valid bounded crops. No model weight is
+committed, and Day 6 preprocessing is not implemented.
+
 ### Day 6 — July 28, 2026 — Plate preprocessing
 
 **Branch:** `feat/plate-preprocessing`  

@@ -9,7 +9,6 @@ import argparse
 import ctypes
 import hashlib
 import json
-import math
 import platform
 import sys
 import time
@@ -20,6 +19,19 @@ from typing import Any
 import cv2
 import numpy as np
 import onnxruntime as ort
+
+BACKEND_DIR = Path(__file__).resolve().parent.parent / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
+from app.services.detection_contract import (  # noqa: E402
+    PlateDetection,
+    validate_detection_bounds,
+)
+from app.services.yolo_detection import (  # noqa: E402
+    decode_yolo_output,
+    letterbox_image,
+)
 
 CONTRACT_VERSION = 1
 IOU_THRESHOLD = 0.5
@@ -32,54 +44,6 @@ NMS_IOU_THRESHOLD = 0.45
 
 class BenchmarkError(RuntimeError):
     """A configuration, fixture, detector, or output failure."""
-
-
-@dataclass(frozen=True)
-class PlateDetection:
-    """A validated plate-localization result in original-image coordinates."""
-
-    bbox: tuple[int, int, int, int]
-    confidence: float
-    label: str
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.bbox, tuple) or len(self.bbox) != 4:
-            raise TypeError("bbox must be a tuple of four integers")
-        if any(type(value) is not int for value in self.bbox):
-            raise TypeError("bbox coordinates must be integers")
-
-        x1, y1, x2, y2 = self.bbox
-        if x1 < 0 or y1 < 0:
-            raise ValueError("bbox coordinates must be non-negative")
-        if x2 <= x1 or y2 <= y1:
-            raise ValueError("bbox must have positive width and height")
-
-        if type(self.confidence) is not float:
-            raise TypeError("confidence must be a float")
-        if not math.isfinite(self.confidence):
-            raise ValueError("confidence must be finite")
-        if not 0.0 <= self.confidence <= 1.0:
-            raise ValueError("confidence must be between 0.0 and 1.0")
-
-        if not isinstance(self.label, str):
-            raise TypeError("label must be a string")
-        if not self.label.strip():
-            raise ValueError("label must not be empty")
-
-
-def validate_detection_bounds(
-    detection: PlateDetection, image_width: int, image_height: int
-) -> None:
-    """Require a detection to be clipped within positive image dimensions."""
-
-    if type(image_width) is not int or type(image_height) is not int:
-        raise TypeError("image dimensions must be integers")
-    if image_width <= 0 or image_height <= 0:
-        raise ValueError("image dimensions must be positive")
-
-    _, _, x2, y2 = detection.bbox
-    if x2 > image_width or y2 > image_height:
-        raise ValueError("bbox must be clipped to the original image bounds")
 
 
 @dataclass
@@ -231,32 +195,7 @@ class OnnxPlateDetector:
 
     @staticmethod
     def _letterbox(image: np.ndarray) -> tuple[np.ndarray, float, int, int]:
-        image_height, image_width = image.shape[:2]
-        scale = min(ONNX_INPUT_SIZE / image_width, ONNX_INPUT_SIZE / image_height)
-        resized_width = round(image_width * scale)
-        resized_height = round(image_height * scale)
-        resized = cv2.resize(
-            image, (resized_width, resized_height), interpolation=cv2.INTER_LINEAR
-        )
-        pad_width = (ONNX_INPUT_SIZE - resized_width) / 2
-        pad_height = (ONNX_INPUT_SIZE - resized_height) / 2
-        left = round(pad_width - 0.1)
-        right = round(pad_width + 0.1)
-        top = round(pad_height - 0.1)
-        bottom = round(pad_height + 0.1)
-        padded = cv2.copyMakeBorder(
-            resized,
-            top,
-            bottom,
-            left,
-            right,
-            cv2.BORDER_CONSTANT,
-            value=(114, 114, 114),
-        )
-        rgb = cv2.cvtColor(padded, cv2.COLOR_BGR2RGB)
-        tensor = np.ascontiguousarray(rgb.transpose(2, 0, 1)[None], dtype=np.float32)
-        tensor /= 255.0
-        return tensor, scale, left, top
+        return letterbox_image(image)
 
     def detect(self, image_path: Path) -> list[PlateDetection]:
         image = cv2.imread(str(image_path))
@@ -270,56 +209,19 @@ class OnnxPlateDetector:
             self.max_observed_rss_mb = max(
                 self.max_observed_rss_mb or observed_rss, observed_rss
             )
-        if raw_output.shape != (1, 5, 8400):
-            raise BenchmarkError(f"Unexpected runtime output shape: {raw_output.shape}")
-
-        predictions = raw_output[0].T
-        candidate_indices = np.flatnonzero(predictions[:, 4] >= CONFIDENCE_THRESHOLD)
-        nms_boxes: list[list[float]] = []
-        scores: list[float] = []
-        for index in candidate_indices:
-            center_x, center_y, width, height = predictions[index, :4]
-            nms_boxes.append(
-                [
-                    float(center_x - width / 2),
-                    float(center_y - height / 2),
-                    float(width),
-                    float(height),
-                ]
-            )
-            scores.append(float(predictions[index, 4]))
-
-        kept = cv2.dnn.NMSBoxes(
-            nms_boxes,
-            scores,
-            CONFIDENCE_THRESHOLD,
-            NMS_IOU_THRESHOLD,
-        )
-        detections: list[PlateDetection] = []
-        for raw_index in np.asarray(kept).reshape(-1):
-            box_x, box_y, box_width, box_height = nms_boxes[int(raw_index)]
-            x1 = max(0, math.floor((box_x - pad_left) / scale))
-            y1 = max(0, math.floor((box_y - pad_top) / scale))
-            x2 = min(
+        try:
+            return decode_yolo_output(
+                raw_output,
                 image_width,
-                math.ceil((box_x + box_width - pad_left) / scale),
-            )
-            y2 = min(
                 image_height,
-                math.ceil((box_y + box_height - pad_top) / scale),
+                scale,
+                pad_left,
+                pad_top,
+                CONFIDENCE_THRESHOLD,
+                NMS_IOU_THRESHOLD,
             )
-            if x2 <= x1 or y2 <= y1:
-                continue
-            detection = PlateDetection(
-                bbox=(x1, y1, x2, y2),
-                confidence=float(scores[int(raw_index)]),
-                label="license_plate",
-            )
-            validate_detection_bounds(detection, image_width, image_height)
-            detections.append(detection)
-
-        detections.sort(key=lambda detection: detection.confidence, reverse=True)
-        return detections
+        except ValueError as exc:
+            raise BenchmarkError(str(exc)) from exc
 
 
 def detect_contour(image_path: Path) -> list[PlateDetection]:
