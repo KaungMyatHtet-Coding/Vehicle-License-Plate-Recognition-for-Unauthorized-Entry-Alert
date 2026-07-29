@@ -191,6 +191,16 @@ python scripts\benchmark_ocr.py --input sample-data\evaluation
 **Acceptance/evidence:** Raw per-sample output, environment details, limitations, primary OCR, and fallback are documented; no fabricated metric appears.  
 **Recommended commit:** `docs: select free local OCR baseline`
 
+**Day 7 status:** Completed on July 29, 2026 on `research/ocr-baseline`.
+Evidence: the reproducible CPU benchmark retained 48 raw results covering four
+labeled synthetic plate crops, six independent Day 6 variants, and two
+RapidOCR modes. Both modes produced 24/24 normalized exact matches on this
+small synthetic fixture set; recognition-only was selected as the primary and
+the full detection/classification/recognition pipeline as the fallback.
+Environment, bundled-model size, confidence, latency, candidate comparison,
+deployment caveats, and limitations are documented. No OCR API integration or
+Day 8 work is included.
+
 ### Day 8 — July 30, 2026 — OCR and normalization
 
 **Branch:** `feat/ocr-recognition`  

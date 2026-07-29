@@ -87,7 +87,16 @@ validation routes remain unchanged.
 `feat/plate-preprocessing`. The backend now produces explicitly configured,
 independent OCR-ready variants from preserved Day 5 crops with shape/type
 metadata and timings. Deterministic tests and a generated legal-fixture contact
-sheet document the behavior. Day 7 and later milestones remain Planned.
+sheet document the behavior.
+
+**Day 7 — OCR evaluation:** Completed on July 29, 2026 on
+`research/ocr-baseline`. A reproducible local CPU benchmark compares
+recognition-only and full-pipeline RapidOCR over four labeled synthetic plate
+crops and six independent Day 6 variants. Raw per-sample evidence, environment,
+model size, confidence, latency, candidate tradeoffs, Render caveats, and the
+primary/fallback choice are retained in
+[the OCR evaluation](docs/ocr_evaluation.md). OCR integration and Day 8 remain
+Planned.
 Deadline: **August 15, 2026**.
 
 ## Documentation
@@ -95,6 +104,7 @@ Deadline: **August 15, 2026**.
 - [Project specification](PROJECT.md)
 - [Daily project plan](PROJECT_PLAN.md)
 - [Task board](docs/task_board.md)
+- [Day 7 OCR evaluation](docs/ocr_evaluation.md)
 
 ## Git policy
 
