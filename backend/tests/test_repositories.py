@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import timedelta
 from pathlib import Path
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -47,6 +47,9 @@ def detection(**changes: object) -> DetectionLogRecord:
         confidence=0.95,
         ocr_status="recognized",
         review_reason=None,
+        decision="AUTHORIZED",
+        decision_reason="ACTIVE_MATCH",
+        matched_vehicle_id=UUID("10000000-0000-0000-0000-000000000001"),
         evidence_bucket=None,
         evidence_object_path=None,
         timings={"ocr_ms": 12.5},
@@ -92,7 +95,7 @@ def test_vehicle_repository_validates_status_dates_and_timezone() -> None:
     assert timestamp_error.value.code == "REPOSITORY_TIMESTAMP_INVALID"
 
 
-def test_detection_log_preserves_day8_ocr_contract_without_deciding() -> None:
+def test_detection_log_preserves_ocr_and_decision_audit_contract() -> None:
     repository = InMemoryDetectionLogRepository()
     record = detection()
 
@@ -100,7 +103,9 @@ def test_detection_log_preserves_day8_ocr_contract_without_deciding() -> None:
     stored = repository.get_by_correlation_id(record.correlation_id)
 
     assert stored == record
-    assert not hasattr(stored, "decision")
+    assert stored.decision == "AUTHORIZED"
+    assert stored.decision_reason == "ACTIVE_MATCH"
+    assert stored.matched_vehicle_id == record.matched_vehicle_id
     assert not hasattr(stored, "authorized")
 
 
@@ -142,12 +147,18 @@ def test_detection_log_accepts_empty_and_low_confidence_manual_review() -> None:
         confidence=None,
         ocr_status="manual_review",
         review_reason="OCR_EMPTY",
+        decision="MANUAL_REVIEW",
+        decision_reason="OCR_EMPTY",
+        matched_vehicle_id=None,
     )
     low = detection(
         correlation_id=uuid4(),
         confidence=0.2,
         ocr_status="manual_review",
         review_reason="OCR_LOW_CONFIDENCE",
+        decision="MANUAL_REVIEW",
+        decision_reason="OCR_LOW_CONFIDENCE",
+        matched_vehicle_id=None,
     )
 
     repository.add(empty)
@@ -192,6 +203,31 @@ def test_evidence_reference_is_paired_relative_and_traversal_free() -> None:
         with pytest.raises(RepositoryError) as caught:
             repository.add(invalid)
         assert caught.value.code == "REPOSITORY_EVIDENCE_INVALID"
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"decision": "AUTHORIZED", "decision_reason": "VEHICLE_NOT_FOUND"},
+        {
+            "decision": "AUTHORIZED",
+            "decision_reason": "ACTIVE_MATCH",
+            "matched_vehicle_id": None,
+        },
+        {"decision": "UNAUTHORIZED", "decision_reason": "ACTIVE_MATCH"},
+        {"decision": "MANUAL_REVIEW", "decision_reason": "VEHICLE_EXPIRED"},
+        {"matched_vehicle_id": "not-a-uuid"},
+    ],
+)
+def test_detection_log_rejects_inconsistent_decision_metadata(
+    changes: dict[str, object],
+) -> None:
+    repository = InMemoryDetectionLogRepository()
+
+    with pytest.raises(RepositoryError) as caught:
+        repository.add(detection(**changes))
+
+    assert caught.value.code == "REPOSITORY_DECISION_INVALID"
 
 
 def test_duplicate_correlation_and_invalid_timings_are_rejected() -> None:
@@ -242,7 +278,7 @@ def test_repository_modules_and_schema_validation_require_no_network(
         raise AssertionError("network access is forbidden")
 
     monkeypatch.setattr("socket.create_connection", forbidden_network)
-    from scripts.validate_schema import MIGRATION, validate_schema
+    from scripts.validate_schema import MIGRATION, OUTCOME_MIGRATION, validate_schema
 
     assert MIGRATION == (
         Path(__file__).resolve().parents[2]
@@ -251,6 +287,54 @@ def test_repository_modules_and_schema_validation_require_no_network(
         / "202607310001_day9_data_model.sql"
     )
     assert validate_schema(MIGRATION.read_text(encoding="utf-8")) == []
+    assert validate_schema(OUTCOME_MIGRATION.read_text(encoding="utf-8")) == []
+
+
+def test_day11_schema_migration_is_forward_only_and_preserves_security() -> None:
+    from scripts.validate_schema import (
+        EXPECTED_REASONS,
+        EXPECTED_STATUSES,
+        MIGRATION,
+        OUTCOME_MIGRATION,
+        validate_migration_order,
+        validate_schema,
+    )
+
+    sql = OUTCOME_MIGRATION.read_text(encoding="utf-8").lower()
+
+    assert sql.strip().startswith("begin;")
+    assert sql.strip().endswith("commit;")
+    assert "drop table" not in sql
+    assert "truncate " not in sql
+    assert "disable row level security" not in sql
+    assert "add column decision text" in sql
+    assert "add column decision_reason text" in sql
+    assert "add column matched_vehicle_id uuid" in sql
+    assert "references public.authorized_vehicles (id)" in sql
+    assert "on delete restrict" in sql
+    assert validate_migration_order((MIGRATION, OUTCOME_MIGRATION)) == []
+    assert validate_migration_order((OUTCOME_MIGRATION, MIGRATION)) == [
+        "invalid migration ordering"
+    ]
+
+    original = OUTCOME_MIGRATION.read_text(encoding="utf-8")
+    for value in EXPECTED_STATUSES | EXPECTED_REASONS:
+        damaged = original.replace(f"'{value}'", "'REMOVED_VALUE'")
+        assert validate_schema(damaged), f"validator accepted missing {value}"
+
+    wrong_mapping = original.replace(
+        "decision = 'AUTHORIZED' and decision_reason = 'ACTIVE_MATCH'",
+        "decision = 'AUTHORIZED' and decision_reason = 'VEHICLE_NOT_FOUND'",
+    )
+    assert "invalid Day 10 status/reason mapping" in validate_schema(wrong_mapping)
+
+    wrong_backfill_order = original.replace(
+        "update public.detection_logs",
+        "update public.other_logs",
+        1,
+    )
+    assert "invalid backfill ordering" in validate_schema(wrong_backfill_order)
+    assert "invalid decision backfill" in validate_schema(wrong_backfill_order)
 
 
 def test_schema_validator_rejects_missing_contract_and_embedded_secret() -> None:

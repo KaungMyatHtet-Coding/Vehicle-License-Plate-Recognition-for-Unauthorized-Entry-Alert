@@ -7,6 +7,8 @@ from datetime import datetime
 from typing import Any, Literal, Protocol
 from uuid import UUID
 
+from app.schemas.decision import DecisionReason, DecisionStatus
+
 VehicleStatus = Literal["active", "inactive", "blocked"]
 OcrStatus = Literal["recognized", "manual_review"]
 OcrReviewReason = Literal["OCR_EMPTY", "OCR_LOW_CONFIDENCE"]
@@ -28,7 +30,7 @@ class AuthorizedVehicleRecord:
 
 @dataclass(frozen=True)
 class DetectionLogRecord:
-    """OCR event metadata without a Day 10 authorization decision."""
+    """Auditable OCR and Day 10 decision metadata."""
 
     id: UUID
     correlation_id: UUID
@@ -37,6 +39,9 @@ class DetectionLogRecord:
     confidence: float | None
     ocr_status: OcrStatus
     review_reason: OcrReviewReason | None
+    decision: DecisionStatus
+    decision_reason: DecisionReason
+    matched_vehicle_id: UUID | None
     evidence_bucket: str | None
     evidence_object_path: str | None
     timings: dict[str, float]

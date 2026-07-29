@@ -18,10 +18,29 @@ from app.repositories.contracts import (
     RepositoryError,
     SettingRecord,
 )
+from app.schemas.decision import DecisionReason, DecisionStatus
 
 PLATE_PATTERN = re.compile(r"^[A-Z0-9]+$")
 SETTING_KEY_PATTERN = re.compile(r"^[a-z][a-z0-9_.-]{0,99}$")
 EVIDENCE_BUCKET_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]{0,99}$")
+DECISION_REASONS: dict[DecisionStatus, set[DecisionReason]] = {
+    "AUTHORIZED": {"ACTIVE_MATCH"},
+    "UNAUTHORIZED": {
+        "VEHICLE_NOT_FOUND",
+        "VEHICLE_INACTIVE",
+        "VEHICLE_BLOCKED",
+        "VEHICLE_NOT_YET_VALID",
+        "VEHICLE_EXPIRED",
+    },
+    "MANUAL_REVIEW": {
+        "OCR_EMPTY",
+        "OCR_LOW_CONFIDENCE",
+        "OCR_RESULT_INVALID",
+        "DECISION_TIME_INVALID",
+        "VEHICLE_RECORD_INVALID",
+        "VEHICLE_LOOKUP_FAILED",
+    },
+}
 
 
 def _validate_timestamp(value: datetime, field: str) -> None:
@@ -129,6 +148,19 @@ class InMemoryDetectionLogRepository:
             raise RepositoryError(
                 "REPOSITORY_OCR_STATE_INVALID",
                 "The OCR status and review reason are inconsistent.",
+            )
+        if (
+            record.decision not in DECISION_REASONS
+            or record.decision_reason not in DECISION_REASONS[record.decision]
+            or (
+                record.matched_vehicle_id is not None
+                and not isinstance(record.matched_vehicle_id, UUID)
+            )
+            or (record.decision == "AUTHORIZED" and record.matched_vehicle_id is None)
+        ):
+            raise RepositoryError(
+                "REPOSITORY_DECISION_INVALID",
+                "The authorization decision metadata is inconsistent.",
             )
         evidence_values = (record.evidence_bucket, record.evidence_object_path)
         if (evidence_values[0] is None) != (evidence_values[1] is None):

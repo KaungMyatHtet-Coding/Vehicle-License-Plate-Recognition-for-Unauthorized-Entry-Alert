@@ -2,13 +2,11 @@
 
 ## Backend foundation
 
-This directory contains the Day 2 FastAPI foundation, Day 3 transient
-image-input validation, and the Day 5 still-image plate-detection service. It
-validates image bytes, locates zero/one/multiple plates, and returns transient
-lossless crops. Day 6 adds configurable non-destructive preprocessing. OCR,
-authorization, persistent upload storage, and deployment remain intentionally
-absent. Day 7 evaluates OCR through a research script, and Day 8 adds transient
-local OCR and normalization without making an authorization decision.
+This directory contains the tested validation, detection, preprocessing, OCR,
+decision, repository, and Day 11 logging/evidence service boundaries. The API
+continues to expose only the existing transient health, validation, detection,
+and OCR routes. Day 11 is network-free and does not connect to Supabase or add
+an orchestration endpoint.
 
 ## Image validation
 
@@ -141,9 +139,46 @@ reasons. Empty/low-confidence OCR, malformed data, time failures, and
 repository failures return `MANUAL_REVIEW`. Messages are stable and
 non-accusatory.
 
-The service does not add an endpoint, persist a result, upload evidence, send
-an alert, or operate a gate. See
+The service itself does not add an endpoint, persist a result, upload evidence,
+send an alert, or operate a gate. Its already-produced result is the input to
+the separate Day 11 logging service. See
 [`docs/authorization_decision.md`](../docs/authorization_decision.md).
+
+## Detection logging and private evidence
+
+Day 11 extends detection logs with the exact Day 10 `decision`, stable
+`decision_reason`, and optional matched vehicle UUID. The logging orchestrator
+accepts an already-produced decision and never recalculates or changes it.
+Annotation, private storage, metadata persistence, signed access, and
+compensating cleanup failures are returned as stable sanitized codes.
+The returned logging contract contains a frozen value snapshot rather than the
+caller's mutable Day 10 model. Storage confirmations must match the requested
+reference, byte count, and digest before metadata can refer to the object.
+Mismatched claimed references are never cleanup targets. Compensating deletion
+is successful only after a matching receipt and verified object absence;
+otherwise the private reference remains available for trusted cleanup.
+
+Evidence annotation copies the decoded source, draws only the selected plate
+box plus decision/reason, and deterministically encodes a metadata-free JPEG
+in memory. Generated paths use UUID components under a date prefix and never
+use raw upload filenames. The in-memory storage adapter is locked, private,
+network-free, and intended for tests/local development.
+
+Trusted server configuration defaults are:
+
+```text
+EVIDENCE_STORAGE_BUCKET=detection-evidence
+EVIDENCE_SIGNED_ACCESS_TTL_SECONDS=300
+EVIDENCE_RETENTION_DAYS=30
+```
+
+Bucket names, signed-access lifetimes (60–3,600 seconds), and retention
+(1–365 days) are validated. The contract returns an opaque short-lived token,
+not a public object URL. In-memory grants are object-bound, expire
+deterministically, and stop resolving after deletion. Live Supabase Storage,
+an HTTP orchestration endpoint,
+retention scheduling, and frontend access remain deferred. See
+[`docs/detection_logging.md`](../docs/detection_logging.md).
 
 ## Windows PowerShell setup
 

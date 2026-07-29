@@ -305,6 +305,16 @@ python -m pytest backend\tests -k "logging or evidence or storage"
 **Acceptance/evidence:** Mock integration proves metadata/evidence association; storage failure cannot change the decision or hide the failure.  
 **Recommended commit:** `feat: persist detection records and evidence`
 
+**Day 11 status:** Completed on August 2, 2026 on
+`feat/detection-logging`. Evidence: deterministic in-memory JPEG annotation,
+collision-safe private object references, signed-access and storage protocols,
+thread-safe network-free storage, and detection-log orchestration retain the
+exact Day 10 decision across annotation, storage, signing, log, and cleanup
+failures. A forward migration adds decision, reason, and matched-vehicle audit
+fields without rewriting Day 9. Focused tests prove metadata/object
+association, privacy/path bounds, compensation, sanitized failures, and no
+public URLs or external I/O. Live Supabase integration remains deferred.
+
 ### Day 12 — August 3, 2026 — Next.js frontend foundation
 
 **Branch:** `feat/frontend-foundation`  
