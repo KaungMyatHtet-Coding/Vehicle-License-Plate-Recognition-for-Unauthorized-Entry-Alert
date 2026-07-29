@@ -250,6 +250,16 @@ python scripts\validate_schema.py
 **Acceptance/evidence:** Schema applies to a clean development project or passes a documented local validation; mock tests require no network; secrets are absent.  
 **Recommended commit:** `feat: define Supabase data model`
 
+**Day 9 status:** Completed on July 31, 2026 on `feat/database-schema`.
+Evidence: a transactional versioned PostgreSQL migration defines constrained
+authorized-vehicle, detection-log, and server-setting tables with normalized
+uniqueness, timestamps, indexes, RLS, and client-role revocation. Typed
+repository interfaces and locked in-memory mocks validate the same key
+boundaries without network access. The offline schema validator, storage/RLS
+guidance, and server-only credential rules are documented. No remote
+connection, persistence integration, evidence upload, or Day 10 authorization
+decision is included.
+
 ### Day 10 — August 1, 2026 — Decision engine
 
 **Branch:** `feat/authorization-engine`  

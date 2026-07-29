@@ -104,7 +104,10 @@ OCR engine, tries recognition-only before the documented full-pipeline
 fallback, returns raw and normalized text with confidence, and sends empty or
 low-confidence results to manual review without making an authorization
 decision. See [the OCR service contract](docs/ocr_recognition.md). Day 9
-remains Planned.
+adds the versioned Supabase data model, typed repository boundaries,
+network-free mocks, and offline schema validation. It does not yet connect the
+application to Supabase or make authorization decisions. See
+[the database design](docs/database_schema.md). Day 10 remains Planned.
 Deadline: **August 15, 2026**.
 
 ## Documentation
@@ -114,6 +117,7 @@ Deadline: **August 15, 2026**.
 - [Task board](docs/task_board.md)
 - [Day 7 OCR evaluation](docs/ocr_evaluation.md)
 - [Day 8 OCR service contract](docs/ocr_recognition.md)
+- [Day 9 Supabase data design](docs/database_schema.md)
 
 ## Git policy
 

@@ -106,6 +106,25 @@ unsupported characters but never guesses `O/0`. This endpoint does not
 authorize, accuse, store, alert, or write files. See
 [`docs/ocr_recognition.md`](../docs/ocr_recognition.md).
 
+## Data model and repositories
+
+Day 9 adds a versioned PostgreSQL/Supabase migration plus typed repository
+interfaces and network-free in-memory repositories. It defines authorized
+vehicle records, Day 8-compatible OCR detection logs, server-owned settings,
+and optional evidence references. It does not connect API routes to Supabase,
+persist requests, upload evidence, or make authorization decisions.
+
+Validate the retained migration and mock contracts from the repository root:
+
+```powershell
+backend\.venv\Scripts\python.exe scripts\validate_schema.py
+backend\.venv\Scripts\python.exe -m pytest -p no:cacheprovider backend\tests -k repositor
+```
+
+See [`docs/database_schema.md`](../docs/database_schema.md) for exact table and
+repository contracts, clean-project application guidance, private evidence
+bucket/RLS requirements, limitations, and server-only credential rules.
+
 ## Windows PowerShell setup
 
 Run these commands from the repository root (`D:\CVPX`):
