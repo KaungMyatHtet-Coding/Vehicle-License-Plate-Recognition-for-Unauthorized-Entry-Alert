@@ -6,8 +6,9 @@ This directory contains the Day 2 FastAPI foundation, Day 3 transient
 image-input validation, and the Day 5 still-image plate-detection service. It
 validates image bytes, locates zero/one/multiple plates, and returns transient
 lossless crops. Day 6 adds configurable non-destructive preprocessing. OCR,
-authorization, persistent upload storage, and deployment are later milestones
-and are intentionally absent.
+authorization, persistent upload storage, and deployment remain intentionally
+absent. Day 7 evaluates OCR through a research script only and does not change
+the application or its HTTP contracts.
 
 ## Image validation
 
@@ -90,7 +91,16 @@ py -3.12 -m venv backend\.venv
 backend\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r backend\requirements-dev.txt
+python -m pip install --no-deps rapidocr==3.9.2
 ```
+
+The final command is required only for the Day 7 research benchmark.
+RapidOCR declares the GUI `opencv-python` package by name even though the
+project intentionally uses `opencv-python-headless`. Installing it with
+`--no-deps` preserves the headless build; its other research dependencies are
+pinned in `requirements-dev.txt`. Consequently, `python -m pip check` reports
+only that metadata-level `opencv-python` requirement as missing. Do not install
+both OpenCV distributions to silence that known warning.
 
 Then remain at the repository root and start the development server:
 
@@ -126,6 +136,17 @@ unit tests require no model; when the ignored verified Day 4 artifact is
 present, the focused suite also exercises all generated evaluation fixtures.
 Day 6 preprocessing tests require no model and use deterministic in-memory
 arrays.
+
+The Day 7 research benchmark is separate from application startup and uses
+ground-truth crops plus the Day 6 variants:
+
+```powershell
+python scripts\benchmark_ocr.py --help
+python scripts\benchmark_ocr.py --input sample-data\evaluation
+```
+
+It writes raw evidence to `docs/day7_ocr_benchmark.json`. Importing the backend
+does not initialize OCR, and no OCR endpoint exists yet.
 
 Alternatively, commands may be run from inside `backend\` after activating
 the environment; in that case use `python -m uvicorn app.main:app` and
