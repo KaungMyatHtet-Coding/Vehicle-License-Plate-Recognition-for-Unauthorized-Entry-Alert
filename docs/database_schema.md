@@ -71,10 +71,12 @@ writes to disk.
 
 ## Evidence bucket and access guidance
 
-Use a private Supabase Storage bucket such as `plate-evidence`; do not make it
-public. Store only the bucket name and collision-safe relative object path in
-`detection_logs`. Creation of objects, retention, partial-failure behavior, and
-signed access are Day 11 work and are deliberately absent here.
+Use a private Supabase Storage bucket such as the Day 11 default
+`detection-evidence`; do not make it public. Store only the bucket name and
+collision-safe relative object path in `detection_logs`. Day 11 adds
+network-free object-storage and signed-access abstractions, retention guidance,
+and explicit partial-failure behavior. A live Supabase adapter remains
+deferred.
 
 Before Day 11 deployment:
 

@@ -59,6 +59,25 @@ class Settings(BaseSettings):
     decision_min_confidence: float = Field(
         default=0.80, ge=0.0, le=1.0, validation_alias="DECISION_MIN_CONFIDENCE"
     )
+    evidence_storage_bucket: str = Field(
+        default="detection-evidence",
+        min_length=1,
+        max_length=100,
+        pattern=r"^[a-z0-9][a-z0-9._-]{0,99}$",
+        validation_alias="EVIDENCE_STORAGE_BUCKET",
+    )
+    evidence_signed_access_ttl_seconds: int = Field(
+        default=300,
+        ge=60,
+        le=3600,
+        validation_alias="EVIDENCE_SIGNED_ACCESS_TTL_SECONDS",
+    )
+    evidence_retention_days: int = Field(
+        default=30,
+        ge=1,
+        le=365,
+        validation_alias="EVIDENCE_RETENTION_DAYS",
+    )
     frontend_origins: Annotated[list[str], NoDecode] = Field(
         default=["http://localhost:3000"], validation_alias="FRONTEND_ORIGINS"
     )
@@ -70,6 +89,19 @@ class Settings(BaseSettings):
 
         if isinstance(value, bool):
             raise ValueError("DECISION_MIN_CONFIDENCE must be numeric")
+        return value
+
+    @field_validator(
+        "evidence_signed_access_ttl_seconds",
+        "evidence_retention_days",
+        mode="before",
+    )
+    @classmethod
+    def reject_boolean_evidence_limits(cls, value: object) -> object:
+        """Reject bool before Pydantic can coerce it to an integer."""
+
+        if isinstance(value, bool):
+            raise ValueError("Evidence limits must be integers")
         return value
 
     @field_validator("frontend_origins", mode="before")

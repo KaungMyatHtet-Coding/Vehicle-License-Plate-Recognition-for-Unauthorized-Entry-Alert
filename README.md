@@ -59,8 +59,10 @@ model configuration, API contracts, and test commands are documented in
 [backend/README.md](backend/README.md). Day 6 adds independently selectable
 grayscale, resize, denoise, contrast, threshold, deskew, and perspective
 variants without changing the detection API. Day 8 adds transient local OCR
-and conservative normalization for validated plate crops. Authorization,
-persistence, frontend features, and deployment remain unimplemented.
+and conservative normalization for validated plate crops. Day 10 adds the pure
+authorization decision. Day 11 adds network-free detection logging and private
+evidence abstractions; live Supabase connectivity, frontend features, and
+deployment remain unimplemented.
 
 ## Current status
 
@@ -111,8 +113,11 @@ application to Supabase or make authorization decisions. See
 deterministic three-way entry-decision service with stable reasons,
 timezone-aware vehicle validity, safe dependency failures, and no physical or
 external side effects. See
-[the decision contract](docs/authorization_decision.md). Day 11 remains
-Planned.
+[the decision contract](docs/authorization_decision.md). Day 11 adds a
+network-free logging/evidence boundary with a forward schema migration,
+deterministic annotated JPEGs, collision-safe private paths, explicit partial
+failures, compensating cleanup, and opaque short-lived signed access. See
+[the logging and evidence contract](docs/detection_logging.md).
 Deadline: **August 15, 2026**.
 
 ## Documentation
@@ -124,6 +129,7 @@ Deadline: **August 15, 2026**.
 - [Day 8 OCR service contract](docs/ocr_recognition.md)
 - [Day 9 Supabase data design](docs/database_schema.md)
 - [Day 10 authorization decision contract](docs/authorization_decision.md)
+- [Day 11 detection logging and evidence](docs/detection_logging.md)
 
 ## Git policy
 

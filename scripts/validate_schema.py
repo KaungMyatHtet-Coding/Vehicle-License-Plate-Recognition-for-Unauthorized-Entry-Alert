@@ -5,12 +5,25 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+from typing import get_args
+
+BACKEND = Path(__file__).resolve().parents[1] / "backend"
+if str(BACKEND) not in sys.path:
+    sys.path.insert(0, str(BACKEND))
+
+from app.schemas.decision import DecisionReason, DecisionStatus  # noqa: E402
 
 MIGRATION = (
     Path(__file__).resolve().parents[1]
     / "supabase"
     / "migrations"
     / "202607310001_day9_data_model.sql"
+)
+OUTCOME_MIGRATION = (
+    Path(__file__).resolve().parents[1]
+    / "supabase"
+    / "migrations"
+    / "202608020001_day11_detection_outcomes.sql"
 )
 
 REQUIRED_PATTERNS = {
@@ -50,7 +63,45 @@ REQUIRED_PATTERNS = {
 FORBIDDEN_PATTERNS = {
     "embedded credential": r"(?i)(service_role_key|password|api_key)\s*=\s*['\"][^'\"]+",
     "client policy": r"(?i)create policy",
-    "Day 10 decision": r"(?i)\b(unauthorized|decision_status|decision_reason)\b",
+}
+
+OUTCOME_PATTERNS = {
+    "transaction": r"\Abegin;.*commit;\s*\Z",
+    "decision column": r"add column decision text",
+    "decision reason column": r"add column decision_reason text",
+    "matched vehicle column": r"add column matched_vehicle_id uuid",
+    "backfill": r"update public\.detection_logs",
+    "decision constraint": r"constraint detection_logs_decision_reason",
+    "authorized vehicle association": (r"constraint detection_logs_authorized_vehicle"),
+    "vehicle foreign key": r"references public\.authorized_vehicles \(id\)",
+    "restricted vehicle deletion": (
+        r"references public\.authorized_vehicles \(id\)\s+on delete restrict"
+    ),
+    "authorized matched vehicle": (
+        r"check \(decision <> 'AUTHORIZED' or matched_vehicle_id is not null\)"
+    ),
+    "decision index": r"create index detection_logs_decision_created_at_idx",
+}
+
+EXPECTED_STATUSES = set(get_args(DecisionStatus))
+EXPECTED_REASONS = set(get_args(DecisionReason))
+EXPECTED_REASON_MAP = {
+    "AUTHORIZED": {"ACTIVE_MATCH"},
+    "UNAUTHORIZED": {
+        "VEHICLE_NOT_FOUND",
+        "VEHICLE_INACTIVE",
+        "VEHICLE_BLOCKED",
+        "VEHICLE_NOT_YET_VALID",
+        "VEHICLE_EXPIRED",
+    },
+    "MANUAL_REVIEW": {
+        "OCR_EMPTY",
+        "OCR_LOW_CONFIDENCE",
+        "OCR_RESULT_INVALID",
+        "DECISION_TIME_INVALID",
+        "VEHICLE_RECORD_INVALID",
+        "VEHICLE_LOOKUP_FAILED",
+    },
 }
 
 
@@ -58,9 +109,14 @@ def validate_schema(sql: str) -> list[str]:
     """Return deterministic validation failures without database or network access."""
 
     normalized = re.sub(r"--[^\n]*", "", sql).strip()
+    patterns = (
+        OUTCOME_PATTERNS
+        if "add column decision text" in normalized.lower()
+        else REQUIRED_PATTERNS
+    )
     failures = [
         f"missing {name}"
-        for name, pattern in REQUIRED_PATTERNS.items()
+        for name, pattern in patterns.items()
         if re.search(pattern, normalized, flags=re.DOTALL | re.IGNORECASE) is None
     ]
     failures.extend(
@@ -68,6 +124,8 @@ def validate_schema(sql: str) -> list[str]:
         for name, pattern in FORBIDDEN_PATTERNS.items()
         if re.search(pattern, normalized) is not None
     )
+    if patterns is OUTCOME_PATTERNS:
+        failures.extend(_validate_outcome_semantics(normalized))
     if normalized.count("(") != normalized.count(")"):
         failures.append("unbalanced parentheses")
     if "$$" in normalized and normalized.count("$$") % 2:
@@ -75,20 +133,102 @@ def validate_schema(sql: str) -> list[str]:
     return failures
 
 
+def _validate_outcome_semantics(sql: str) -> list[str]:
+    """Validate exact Day 10 vocabulary, mapping, and safe migration ordering."""
+
+    failures: list[str] = []
+    lowered = sql.lower()
+    update_at = lowered.find("update public.detection_logs")
+    not_null_at = lowered.find("alter column decision set not null")
+    constraint_at = lowered.find("constraint detection_logs_decision_reason")
+    if min(update_at, not_null_at, constraint_at) < 0 or not (
+        update_at < not_null_at <= constraint_at
+    ):
+        failures.append("invalid backfill ordering")
+
+    backfill_pattern = (
+        r"update public\.detection_logs\s+set\s+"
+        r"decision = 'MANUAL_REVIEW',\s+decision_reason = case\s+"
+        r"when review_reason = 'OCR_EMPTY' then 'OCR_EMPTY'\s+"
+        r"when review_reason = 'OCR_LOW_CONFIDENCE' then 'OCR_LOW_CONFIDENCE'\s+"
+        r"else 'OCR_RESULT_INVALID'\s+end;"
+    )
+    if re.search(backfill_pattern, sql, flags=re.DOTALL | re.IGNORECASE) is None:
+        failures.append("invalid decision backfill")
+
+    constraint_end = lowered.find(
+        "constraint detection_logs_authorized_vehicle", constraint_at
+    )
+    constraint_sql = (
+        sql[constraint_at:constraint_end]
+        if constraint_at >= 0 and constraint_end > constraint_at
+        else ""
+    )
+    tokens = set(re.findall(r"'([A-Z_]+)'", constraint_sql))
+    if tokens != EXPECTED_STATUSES | EXPECTED_REASONS:
+        failures.append("invalid Day 10 decision vocabulary")
+
+    actual_mapping: dict[str, set[str]] = {}
+    authorized = re.search(
+        r"decision = 'AUTHORIZED'\s+and decision_reason = '([^']+)'",
+        constraint_sql,
+        flags=re.DOTALL,
+    )
+    actual_mapping["AUTHORIZED"] = {authorized.group(1)} if authorized else set()
+    for status in ("UNAUTHORIZED", "MANUAL_REVIEW"):
+        match = re.search(
+            rf"decision = '{status}'\s+and decision_reason in \((.*?)\)",
+            constraint_sql,
+            flags=re.DOTALL,
+        )
+        actual_mapping[status] = (
+            set(re.findall(r"'([A-Z_]+)'", match.group(1))) if match else set()
+        )
+    if (
+        set(actual_mapping) != EXPECTED_STATUSES
+        or actual_mapping != EXPECTED_REASON_MAP
+    ):
+        failures.append("invalid Day 10 status/reason mapping")
+    return failures
+
+
+def validate_migration_order(paths: tuple[Path, ...]) -> list[str]:
+    """Require deterministic increasing migration names with Day 9 before Day 11."""
+
+    names = [path.name for path in paths]
+    if names != sorted(names) or names != [MIGRATION.name, OUTCOME_MIGRATION.name]:
+        return ["invalid migration ordering"]
+    return []
+
+
 def main() -> int:
     """Validate the retained migration and print a safe local result."""
 
     try:
-        sql = MIGRATION.read_text(encoding="utf-8")
+        migrations = (MIGRATION, OUTCOME_MIGRATION)
+        sql_by_migration = [
+            (migration.name, migration.read_text(encoding="utf-8"))
+            for migration in migrations
+        ]
     except OSError:
         print("Schema validation failed: migration unavailable.", file=sys.stderr)
         return 1
-    failures = validate_schema(sql)
+    failures = [
+        (name, failure)
+        for name, sql in sql_by_migration
+        for failure in validate_schema(sql)
+    ]
+    failures.extend(
+        ("migration sequence", failure)
+        for failure in validate_migration_order(migrations)
+    )
     if failures:
-        for failure in failures:
-            print(f"Schema validation failed: {failure}.", file=sys.stderr)
+        for name, failure in failures:
+            print(f"Schema validation failed ({name}): {failure}.", file=sys.stderr)
         return 1
-    print(f"Schema validation passed: {MIGRATION.name}")
+    print(
+        "Schema validation passed: " + ", ".join(name for name, _ in sql_by_migration)
+    )
     return 0
 
 
