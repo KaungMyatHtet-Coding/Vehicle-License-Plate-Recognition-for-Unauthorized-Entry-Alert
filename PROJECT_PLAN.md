@@ -220,6 +220,17 @@ python -m pytest backend\tests
 **Acceptance/evidence:** Normalization examples such as `YGN 5A-1234` → `YGN5A1234` pass; low confidence never automatically accuses a vehicle.  
 **Recommended commit:** `feat: integrate OCR and plate normalization`
 
+**Day 8 status:** Completed on July 30, 2026 on `feat/ocr-recognition`.
+Evidence: a lazily reused RapidOCR 3.9.2 service runs the Day 7
+recognition-only primary and optional full-pipeline fallback with all sessions
+restricted to `CPUExecutionProvider`. A separate conservative normalizer
+uppercases and retains only ASCII letters/digits, without `O/0` substitution.
+Empty and below-threshold results return `manual_review`; no authorization
+decision is made. The transient `POST /api/recognition/recognize-plate` route
+preserves secure JPEG/PNG validation and returns raw/normalized text,
+confidence, mode, review reason, dimensions, and timings. No Day 9 data work
+is included.
+
 ### Day 9 — July 31, 2026 — Supabase data design
 
 **Branch:** `feat/database-schema`  

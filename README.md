@@ -58,8 +58,9 @@ confidence, timings, and lossless transient crops. Windows PowerShell setup,
 model configuration, API contracts, and test commands are documented in
 [backend/README.md](backend/README.md). Day 6 adds independently selectable
 grayscale, resize, denoise, contrast, threshold, deskew, and perspective
-variants without changing the detection API. OCR, authorization, persistence,
-frontend features, and deployment remain unimplemented.
+variants without changing the detection API. Day 8 adds transient local OCR
+and conservative normalization for validated plate crops. Authorization,
+persistence, frontend features, and deployment remain unimplemented.
 
 ## Current status
 
@@ -95,8 +96,15 @@ recognition-only and full-pipeline RapidOCR over four labeled synthetic plate
 crops and six independent Day 6 variants. Raw per-sample evidence, environment,
 model size, confidence, latency, candidate tradeoffs, Render caveats, and the
 primary/fallback choice are retained in
-[the OCR evaluation](docs/ocr_evaluation.md). OCR integration and Day 8 remain
-Planned.
+[the OCR evaluation](docs/ocr_evaluation.md).
+
+**Day 8 — OCR and normalization:** Completed on July 30, 2026 on
+`feat/ocr-recognition`. The backend now lazily reuses the selected local CPU
+OCR engine, tries recognition-only before the documented full-pipeline
+fallback, returns raw and normalized text with confidence, and sends empty or
+low-confidence results to manual review without making an authorization
+decision. See [the OCR service contract](docs/ocr_recognition.md). Day 9
+remains Planned.
 Deadline: **August 15, 2026**.
 
 ## Documentation
@@ -105,6 +113,7 @@ Deadline: **August 15, 2026**.
 - [Daily project plan](PROJECT_PLAN.md)
 - [Task board](docs/task_board.md)
 - [Day 7 OCR evaluation](docs/ocr_evaluation.md)
+- [Day 8 OCR service contract](docs/ocr_recognition.md)
 
 ## Git policy
 

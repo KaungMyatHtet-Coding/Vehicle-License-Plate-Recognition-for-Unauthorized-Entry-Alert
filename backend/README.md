@@ -7,8 +7,8 @@ image-input validation, and the Day 5 still-image plate-detection service. It
 validates image bytes, locates zero/one/multiple plates, and returns transient
 lossless crops. Day 6 adds configurable non-destructive preprocessing. OCR,
 authorization, persistent upload storage, and deployment remain intentionally
-absent. Day 7 evaluates OCR through a research script only and does not change
-the application or its HTTP contracts.
+absent. Day 7 evaluates OCR through a research script, and Day 8 adds transient
+local OCR and normalization without making an authorization decision.
 
 ## Image validation
 
@@ -81,6 +81,31 @@ the internal crop-to-variant boundary for later OCR work. See
 [`docs/plate_preprocessing.md`](../docs/plate_preprocessing.md) for the exact
 contract, legal-fixture visual example, limitations, and regeneration command.
 
+## Plate OCR and normalization
+
+`POST /api/recognition/recognize-plate` accepts one already cropped plate image
+through the same secure bounded JPEG/PNG validation flow. It does not run the
+plate detector. Configure the review threshold and documented fallback:
+
+```text
+OCR_MIN_CONFIDENCE=0.80
+OCR_FULL_PIPELINE_FALLBACK=true
+```
+
+The service initializes RapidOCR lazily on the first OCR request and reuses one
+process-local instance. Recognition-only is always attempted first. When it is
+empty or below the configured threshold, the optional Day 7 full pipeline is
+attempted on the same untouched crop copy. All detection, classification, and
+recognition sessions must report only ONNX Runtime `CPUExecutionProvider`.
+
+The response contains raw text, normalized ASCII letters/digits, confidence,
+selected mode, inference/total milliseconds, and `recognized` or
+`manual_review`. Empty output uses `OCR_EMPTY`; below-threshold output uses
+`OCR_LOW_CONFIDENCE`. Normalization removes whitespace, separators, and
+unsupported characters but never guesses `O/0`. This endpoint does not
+authorize, accuse, store, alert, or write files. See
+[`docs/ocr_recognition.md`](../docs/ocr_recognition.md).
+
 ## Windows PowerShell setup
 
 Run these commands from the repository root (`D:\CVPX`):
@@ -94,7 +119,7 @@ python -m pip install -r backend\requirements-dev.txt
 python -m pip install --no-deps rapidocr==3.9.2
 ```
 
-The final command is required only for the Day 7 research benchmark.
+The final command is required for the Day 7 benchmark and Day 8 local OCR.
 RapidOCR declares the GUI `opencv-python` package by name even though the
 project intentionally uses `opencv-python-headless`. Installing it with
 `--no-deps` preserves the headless build; its other research dependencies are
@@ -146,7 +171,8 @@ python scripts\benchmark_ocr.py --input sample-data\evaluation
 ```
 
 It writes raw evidence to `docs/day7_ocr_benchmark.json`. Importing the backend
-does not initialize OCR, and no OCR endpoint exists yet.
+does not initialize OCR. Day 8 application OCR remains lazy until
+`recognize-plate` is called.
 
 Alternatively, commands may be run from inside `backend\` after activating
 the environment; in that case use `python -m uvicorn app.main:app` and
