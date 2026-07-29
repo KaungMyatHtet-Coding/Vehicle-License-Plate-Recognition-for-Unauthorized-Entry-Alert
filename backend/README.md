@@ -125,6 +125,26 @@ See [`docs/database_schema.md`](../docs/database_schema.md) for exact table and
 repository contracts, clean-project application guidance, private evidence
 bucket/RLS requirements, limitations, and server-only credential rules.
 
+## Authorization decision engine
+
+Day 10 adds a pure service that consumes the Day 8 OCR response and Day 9
+authorized-vehicle repository. Configure its independent inclusive threshold:
+
+```text
+DECISION_MIN_CONFIDENCE=0.80
+```
+
+Only reliable normalized OCR can be looked up. An active exact match inside
+its timezone-aware validity interval returns `AUTHORIZED`; missing, inactive,
+blocked, not-yet-valid, or expired records return explicit `UNAUTHORIZED`
+reasons. Empty/low-confidence OCR, malformed data, time failures, and
+repository failures return `MANUAL_REVIEW`. Messages are stable and
+non-accusatory.
+
+The service does not add an endpoint, persist a result, upload evidence, send
+an alert, or operate a gate. See
+[`docs/authorization_decision.md`](../docs/authorization_decision.md).
+
 ## Windows PowerShell setup
 
 Run these commands from the repository root (`D:\CVPX`):

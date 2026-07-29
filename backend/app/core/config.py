@@ -56,9 +56,21 @@ class Settings(BaseSettings):
     ocr_full_pipeline_fallback: bool = Field(
         default=True, validation_alias="OCR_FULL_PIPELINE_FALLBACK"
     )
+    decision_min_confidence: float = Field(
+        default=0.80, ge=0.0, le=1.0, validation_alias="DECISION_MIN_CONFIDENCE"
+    )
     frontend_origins: Annotated[list[str], NoDecode] = Field(
         default=["http://localhost:3000"], validation_alias="FRONTEND_ORIGINS"
     )
+
+    @field_validator("decision_min_confidence", mode="before")
+    @classmethod
+    def reject_boolean_decision_threshold(cls, value: object) -> object:
+        """Reject bool before Pydantic can coerce it to zero or one."""
+
+        if isinstance(value, bool):
+            raise ValueError("DECISION_MIN_CONFIDENCE must be numeric")
+        return value
 
     @field_validator("frontend_origins", mode="before")
     @classmethod

@@ -107,7 +107,12 @@ decision. See [the OCR service contract](docs/ocr_recognition.md). Day 9
 adds the versioned Supabase data model, typed repository boundaries,
 network-free mocks, and offline schema validation. It does not yet connect the
 application to Supabase or make authorization decisions. See
-[the database design](docs/database_schema.md). Day 10 remains Planned.
+[the database design](docs/database_schema.md). Day 10 adds a pure,
+deterministic three-way entry-decision service with stable reasons,
+timezone-aware vehicle validity, safe dependency failures, and no physical or
+external side effects. See
+[the decision contract](docs/authorization_decision.md). Day 11 remains
+Planned.
 Deadline: **August 15, 2026**.
 
 ## Documentation
@@ -118,6 +123,7 @@ Deadline: **August 15, 2026**.
 - [Day 7 OCR evaluation](docs/ocr_evaluation.md)
 - [Day 8 OCR service contract](docs/ocr_recognition.md)
 - [Day 9 Supabase data design](docs/database_schema.md)
+- [Day 10 authorization decision contract](docs/authorization_decision.md)
 
 ## Git policy
 
