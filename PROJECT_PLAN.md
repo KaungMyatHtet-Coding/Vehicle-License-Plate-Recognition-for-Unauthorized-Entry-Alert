@@ -278,6 +278,15 @@ python -m pytest backend\tests -k decision
 **Acceptance/evidence:** Boundary, status, confidence, missing-record, and dependency-failure tests cover every rule and reason code.  
 **Recommended commit:** `feat: add authorization decision engine`
 
+**Day 10 status:** Completed on August 1, 2026 on
+`feat/authorization-engine`. Evidence: a pure side-effect-free service applies
+the configurable confidence boundary, exact normalized lookup, timezone-aware
+validity, and all active/inactive/blocked/missing/not-yet-valid/expired rules.
+Stable decisions, reasons, and sanitized non-accusatory messages retain Day 8
+OCR and Day 9 vehicle identifiers for audit. Empty, low-confidence, malformed,
+dependency-failed, and invalid-record cases fail to manual review and never
+grant entry. No persistence, evidence, alert, gate, or Day 11 work is included.
+
 ### Day 11 — August 2, 2026 — Detection logging and evidence
 
 **Branch:** `feat/detection-logging`  
