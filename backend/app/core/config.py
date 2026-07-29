@@ -50,6 +50,12 @@ class Settings(BaseSettings):
     detector_nms_iou_threshold: float = Field(
         default=0.45, ge=0.0, le=1.0, validation_alias="DETECTOR_NMS_IOU_THRESHOLD"
     )
+    ocr_min_confidence: float = Field(
+        default=0.80, ge=0.0, le=1.0, validation_alias="OCR_MIN_CONFIDENCE"
+    )
+    ocr_full_pipeline_fallback: bool = Field(
+        default=True, validation_alias="OCR_FULL_PIPELINE_FALLBACK"
+    )
     frontend_origins: Annotated[list[str], NoDecode] = Field(
         default=["http://localhost:3000"], validation_alias="FRONTEND_ORIGINS"
     )
