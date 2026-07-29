@@ -14,7 +14,6 @@ A task may move to Completed only when its scoped files exist, applicable verifi
 
 | Date | Milestone | Owner | Required evidence |
 |---|---|---|---|
-| Jul 31 | Supabase data design | Project developer | Schema validation and mock repository tests |
 | Aug 1 | Decision engine | Project developer | Tests for all three decisions and failures |
 | Aug 2 | Detection logging/evidence | Project developer | Storage/log mock integration tests |
 | Aug 3 | Frontend foundation | Project developer | Lint, type-check, build, responsive smoke test |
@@ -50,6 +49,7 @@ None.
 | Jul 29 | Plate preprocessing | Project developer | Non-destructive configurable grayscale/resize/denoise/contrast/threshold/deskew/perspective service; deterministic shape/type, preservation, independent-stage, geometry, bound, and error tests; reproducible legal-fixture contact sheet; no OCR |
 | Jul 29 | OCR evaluation | Project developer | 48 retained raw CPU results across four labeled synthetic crops, six independent preprocessing variants, and two RapidOCR modes; 24/24 exact for each mode on this limited set; primary/fallback, environment, size, latency, confidence, Render caveats, and limitations documented; no OCR integration |
 | Jul 30 | OCR and normalization | Project developer | Lazy RapidOCR 3.9.2 CPU-only primary/fallback service; separate conservative normalization; raw/normalized text, confidence, mode, review reason, and timing contract; empty/low-confidence manual review; focused service/API/failure tests; no authorization or persistence |
+| Jul 31 | Supabase data design | Project developer | Transactional versioned schema with normalized uniqueness, timestamps, indexes, RLS, and client revocation; typed repository contracts and locked network-free mocks; offline validator; private-bucket/RLS and server-only credential guidance; no remote integration or decision logic |
 
 ## Blocked
 
