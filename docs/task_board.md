@@ -14,7 +14,6 @@ A task may move to Completed only when its scoped files exist, applicable verifi
 
 | Date | Milestone | Owner | Required evidence |
 |---|---|---|---|
-| Aug 3 | Frontend foundation | Project developer | Lint, type-check, build, responsive smoke test |
 | Aug 4 | Recognition interface | Project developer | Six result/error-state tests |
 | Aug 5 | Dashboard/history/alerts | Project developer | Filter/statistics tests and UI evidence |
 | Aug 6 | Authorized vehicles | Project developer | CRUD/status/decision integration evidence |
@@ -50,6 +49,7 @@ None.
 | Jul 31 | Supabase data design | Project developer | Transactional versioned schema with normalized uniqueness, timestamps, indexes, RLS, and client revocation; typed repository contracts and locked network-free mocks; offline validator; private-bucket/RLS and server-only credential guidance; no remote integration or decision logic |
 | Aug 1 | Decision engine | Project developer | Pure three-way decision service; configurable inclusive confidence boundary; exact active/valid lookup; explicit missing/inactive/blocked/not-yet-valid/expired reasons; timezone and dependency failures fail to manual review; stable non-accusatory output; no persistence, alert, or gate action |
 | Aug 2 | Detection logging/evidence | Project developer | Deterministic metadata-free JPEG annotation; collision-safe private paths; thread-safe network-free storage and signed-access abstraction; exact decision/reason/vehicle audit fields; explicit storage/log/signing/cleanup failures; mock association and compensation tests; no live Supabase or public URLs |
+| Aug 3 | Frontend foundation | Project developer | Next.js App Router with strict TypeScript/Tailwind; responsive accessible navigation and five route layouts; typed sanitized environment-based API client; focused tests, lint, type-check, production build, route smoke, and clean dependency audit |
 
 ## Blocked
 

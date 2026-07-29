@@ -336,6 +336,16 @@ npm run build
 **Acceptance/evidence:** Production build passes, routes render at mobile/desktop widths, and no secret enters the browser bundle.  
 **Recommended commit:** `feat: establish frontend foundation`
 
+**Day 12 status:** Completed on August 3, 2026 on
+`feat/frontend-foundation`. Evidence: a production-buildable Next.js App
+Router foundation uses strict TypeScript, Tailwind CSS, responsive
+mobile/desktop navigation, five planned route layouts, reusable accessible
+loading/error states, and a typed environment-based API boundary aligned with
+stable backend contracts through Day 11. Focused component/API tests, lint,
+type-check, build, route smoke checks, and dependency audit pass without
+browser secrets or live external connectivity. Recognition interaction and
+all Day 13 work remain deferred.
+
 ### Day 13 — August 4, 2026 — Recognition interface
 
 **Branch:** `feat/recognition-ui`  
