@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-import { FoundationPanel, PageHeader } from "@/components/page-layout";
+import { PageHeader } from "@/components/page-layout";
+import { RecognitionWorkspace } from "@/components/recognition-workspace";
 
 export const metadata: Metadata = {
   title: "Recognition",
@@ -12,12 +13,9 @@ export default function RecognitionPage() {
       <PageHeader
         eyebrow="Still-image workflow"
         title="Recognition"
-        description="The route and accessible layout are ready. Image selection, submission, and result presentation belong to Day 13."
+        description="Analyze one vehicle image to receive an explainable plate authorization result. This tool supports security review and does not operate a physical gate."
       />
-      <FoundationPanel
-        title="Recognition workspace"
-        description="No image is selected. This foundation does not upload files, run models, or make entry decisions."
-      />
+      <RecognitionWorkspace />
     </div>
   );
 }

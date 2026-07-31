@@ -4,9 +4,8 @@
 
 This directory contains the tested validation, detection, preprocessing, OCR,
 decision, repository, and Day 11 logging/evidence service boundaries. The API
-continues to expose only the existing transient health, validation, detection,
-and OCR routes. Day 11 is network-free and does not connect to Supabase or add
-an orchestration endpoint.
+also exposes the Day 13 still-image orchestration route. The retained adapters
+remain network-free and do not connect to Supabase.
 
 ## Image validation
 
@@ -179,6 +178,19 @@ deterministically, and stop resolving after deletion. Live Supabase Storage,
 an HTTP orchestration endpoint,
 retention scheduling, and frontend access remain deferred. See
 [`docs/detection_logging.md`](../docs/detection_logging.md).
+
+## Still-image recognition orchestration
+
+`POST /api/recognition/analyze` accepts one validated vehicle JPEG/PNG and
+composes the existing detector, OCR/preprocessing, decision, logging, and
+private-evidence boundaries. It returns an explicit no-plate result or the
+selected primary crop, OCR values, authoritative frozen decision, correlation
+ID, logging/evidence status, and timings. It never recalculates authorization
+in the client or exposes a private evidence path/token as a browser URL.
+
+The default Day 13 repositories/storage are process-local and network-free;
+live Supabase persistence remains deferred. See
+[`docs/recognition_interface.md`](../docs/recognition_interface.md).
 
 ## Windows PowerShell setup
 

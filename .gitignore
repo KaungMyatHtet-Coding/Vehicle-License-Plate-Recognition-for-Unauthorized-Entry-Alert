@@ -59,6 +59,11 @@ logs/
 uploads/
 uploaded-images/
 evidence/
+!docs/evidence/
+!docs/evidence/day13/
+!docs/evidence/day13/**
+!frontend/tests/evidence/
+!frontend/tests/evidence/**
 detection-screenshots/
 artifacts/
 
@@ -83,4 +88,3 @@ tmp/
 *.mov
 *.mkv
 *.webm
-

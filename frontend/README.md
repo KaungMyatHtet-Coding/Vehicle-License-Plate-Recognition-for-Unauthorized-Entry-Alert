@@ -10,9 +10,9 @@ for:
 - `/alerts`
 - `/authorized-vehicles`
 
-Day 12 intentionally does not submit images, display recognition results,
-query history, deliver alerts, or manage vehicle records. Those behaviors
-belong to later milestones.
+Day 13 replaces the Recognition placeholder with a complete still-image
+selection, preview, submission, result, failure, and reset workflow. Dashboard,
+history, alerts, and vehicle-management routes remain foundation-only.
 
 ## Local setup
 
@@ -50,6 +50,7 @@ npm.cmd run test
 npm.cmd run lint
 npm.cmd run type-check
 npm.cmd run build
+npm.cmd run evidence:day13
 npm.cmd audit
 ```
 
@@ -57,3 +58,17 @@ The shell includes a keyboard skip link, semantic navigation/main landmarks,
 descriptive page headings and metadata, visible focus treatment, reduced-motion
 handling, minimum-size actions, mobile horizontal navigation, and a persistent
 desktop sidebar.
+
+## Recognition workflow
+
+The browser submits one JPEG/PNG as multipart data to
+`POST /api/recognition/analyze`. It runtime-validates the complete response and
+displays only the backend's authoritative decision/reason, OCR data, selected
+plate crop, safe processing metrics, and private evidence/log availability.
+Blob preview URLs are revoked when replaced, reset, or unmounted. See
+[`docs/recognition_interface.md`](../docs/recognition_interface.md).
+
+The evidence command uses the installed system Chrome and deterministic
+request interception to regenerate the six UI-state screenshots in
+`docs/evidence/day13/`. It is development evidence only and does not bypass or
+modify production recognition behavior.

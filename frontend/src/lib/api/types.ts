@@ -134,3 +134,20 @@ export interface DetectionLoggingResult {
   readonly signed_access: SignedEvidenceAccess | null;
   readonly completed_at: string;
 }
+
+export interface RecognitionTimings {
+  readonly detection_ms: number;
+  readonly ocr_ms: number;
+  readonly total_ms: number;
+}
+
+export interface RecognitionResponse {
+  readonly correlation_id: string;
+  readonly status: "no_plate_detected" | "completed";
+  readonly message: string;
+  readonly detection_count: number;
+  readonly selected_plate: PlateDetection | null;
+  readonly ocr: PlateOcrResponse | null;
+  readonly logging: DetectionLoggingResult | null;
+  readonly timings: RecognitionTimings;
+}
