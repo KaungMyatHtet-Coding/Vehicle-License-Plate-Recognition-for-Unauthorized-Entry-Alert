@@ -368,6 +368,18 @@ npm run build
 **Acceptance/evidence:** Authorized, unauthorized, manual-review, no-plate, invalid-file, and server-failure states are demonstrated with recorded screenshots/tests.  
 **Recommended commit:** `feat: add image recognition interface`
 
+**Day 13 status:** Completed on August 4, 2026 on `feat/recognition-ui`.
+Evidence: the authoritative orchestration endpoint and accessible browser
+workflow have deterministic backend/frontend coverage for required decisions,
+no-plate, invalid-file, server/network/timeout failures, preview/reset, and
+duplicate-submission behavior. Six inspected 1440×1100 PNG screenshots under
+`docs/evidence/day13/` demonstrate authorized, unauthorized, manual-review,
+no-plate, invalid-file, and server-failure rendering. Playwright 1.62.1 drives
+system Chrome and intercepts documented response contracts, so the screenshots
+prove frontend state handling rather than live OCR accuracy. Full tests, lint,
+type-check, build, schema validation, and dependency audit pass; no production
+bypass was added.
+
 ### Day 14 — August 5, 2026 — Dashboard, history, and alerts
 
 **Branch:** `feat/dashboard-history`  

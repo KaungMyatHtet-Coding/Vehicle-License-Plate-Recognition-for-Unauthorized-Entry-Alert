@@ -14,7 +14,6 @@ A task may move to Completed only when its scoped files exist, applicable verifi
 
 | Date | Milestone | Owner | Required evidence |
 |---|---|---|---|
-| Aug 4 | Recognition interface | Project developer | Six result/error-state tests |
 | Aug 5 | Dashboard/history/alerts | Project developer | Filter/statistics tests and UI evidence |
 | Aug 6 | Authorized vehicles | Project developer | CRUD/status/decision integration evidence |
 | Aug 7 | Core integration freeze | Project developer | Repeated end-to-end image smoke tests |
@@ -50,6 +49,7 @@ None.
 | Aug 1 | Decision engine | Project developer | Pure three-way decision service; configurable inclusive confidence boundary; exact active/valid lookup; explicit missing/inactive/blocked/not-yet-valid/expired reasons; timezone and dependency failures fail to manual review; stable non-accusatory output; no persistence, alert, or gate action |
 | Aug 2 | Detection logging/evidence | Project developer | Deterministic metadata-free JPEG annotation; collision-safe private paths; thread-safe network-free storage and signed-access abstraction; exact decision/reason/vehicle audit fields; explicit storage/log/signing/cleanup failures; mock association and compensation tests; no live Supabase or public URLs |
 | Aug 3 | Frontend foundation | Project developer | Next.js App Router with strict TypeScript/Tailwind; responsive accessible navigation and five route layouts; typed sanitized environment-based API client; focused tests, lint, type-check, production build, route smoke, and clean dependency audit |
+| Aug 4 | Recognition interface | Project developer | Authoritative full-pipeline endpoint; accessible upload/preview/result/reset workflow; deterministic backend/frontend state tests; six inspected 1440×1100 Playwright/system-Chrome screenshots under `docs/evidence/day13/`; interception evidence labeled as frontend rendering rather than live OCR |
 
 ## Blocked
 
