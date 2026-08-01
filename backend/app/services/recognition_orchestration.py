@@ -4,15 +4,25 @@ from __future__ import annotations
 
 import base64
 import binascii
+import logging
 import time
+from datetime import datetime, timezone
 from typing import Protocol
+from uuid import UUID
 
 from app.schemas.detection import ImageDetectionResponse
-from app.schemas.recognition import RecognitionResponse, RecognitionTimings
+from app.repositories.contracts import RecognitionActivityRepository
+from app.schemas.recognition import (
+    PublicLoggingResult,
+    RecognitionResponse,
+    RecognitionTimings,
+)
 from app.services.detection_logging import DetectionLoggingService
 from app.services.ocr_recognition import PlateOcrService
 from app.services.plate_detection import PlateDetectionService
 from app.services.authorization_decision import AuthorizationDecisionService
+
+logger = logging.getLogger(__name__)
 
 
 class Detector(Protocol):
@@ -40,16 +50,28 @@ class RecognitionOrchestrationService:
         ocr: PlateOcrService,
         decision: AuthorizationDecisionService,
         logging: DetectionLoggingService,
+        activity: RecognitionActivityRepository | None = None,
     ) -> None:
         self._detector = detector
         self._ocr = ocr
         self._decision = decision
         self._logging = logging
+        self._activity = activity
 
     def recognize(self, image_bytes: bytes, correlation_id: str) -> RecognitionResponse:
         started = time.perf_counter()
         detection = self._detector.detect(image_bytes, correlation_id)
         if detection.status == "no_plate_detected":
+            if self._activity is not None:
+                try:
+                    self._activity.add_no_plate(
+                        UUID(correlation_id), datetime.now(timezone.utc)
+                    )
+                except Exception:
+                    logger.warning(
+                        "No-plate activity persistence failed for correlation_id=%s category=NO_PLATE_ACTIVITY_PERSISTENCE_FAILED",
+                        correlation_id,
+                    )
             total_ms = round((time.perf_counter() - started) * 1000, 3)
             return RecognitionResponse(
                 correlation_id=correlation_id,
@@ -105,7 +127,14 @@ class RecognitionOrchestrationService:
             detection_count=detection.detection_count,
             selected_plate=selected,
             ocr=ocr,
-            logging=logging,
+            logging=PublicLoggingResult(
+                decision=logging.decision,
+                status=logging.status,
+                failures=logging.failures,
+                log_persisted=logging.log_persisted,
+                evidence_available=logging.evidence is not None,
+                completed_at=logging.completed_at.isoformat(),
+            ),
             timings=RecognitionTimings(
                 detection_ms=detection.total_ms,
                 ocr_ms=ocr.total_ms,

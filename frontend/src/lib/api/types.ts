@@ -115,24 +115,72 @@ export type LoggingFailureCode =
   | "EVIDENCE_CLEANUP_FAILED"
   | "SIGNED_ACCESS_FAILED";
 
-export interface EvidenceReference {
-  readonly bucket: string;
-  readonly object_path: string;
-}
-
-export interface SignedEvidenceAccess {
-  readonly token: string;
-  readonly expires_at: string;
-}
-
 export interface DetectionLoggingResult {
   readonly decision: DecisionAuditSnapshot;
   readonly status: "completed" | "partial_failure";
   readonly failures: ReadonlyArray<LoggingFailureCode>;
   readonly log_persisted: boolean;
-  readonly evidence: EvidenceReference | null;
-  readonly signed_access: SignedEvidenceAccess | null;
+  readonly evidence_available: boolean;
   readonly completed_at: string;
+}
+
+export interface DetectionSummary {
+  readonly correlation_id: string;
+  readonly decision: DecisionStatus;
+  readonly reason: DecisionReason;
+  readonly reason_message: string;
+  readonly normalized_plate: string;
+  readonly confidence: number | null;
+  readonly created_at: string;
+  readonly evidence_available: boolean;
+}
+
+export interface DetectionDetail extends DetectionSummary {
+  readonly timings: Readonly<Record<string, number>>;
+  readonly evidence_access: "restricted";
+}
+
+export interface PaginatedDetections {
+  readonly items: ReadonlyArray<DetectionSummary>;
+  readonly page: number;
+  readonly page_size: number;
+  readonly total_items: number;
+  readonly total_pages: number;
+  readonly timezone: "UTC";
+}
+
+export interface TrendBucket {
+  readonly bucket_start: string;
+  readonly authorized: number;
+  readonly unauthorized: number;
+  readonly manual_review: number;
+  readonly no_plate: number;
+  readonly total: number;
+}
+
+export interface DashboardStatistics {
+  readonly total_recognitions: number;
+  readonly authorized: number;
+  readonly unauthorized: number;
+  readonly manual_review: number;
+  readonly no_plate: number;
+  readonly timezone: "UTC";
+  readonly trend_granularity: "day";
+  readonly trend: ReadonlyArray<TrendBucket>;
+}
+
+export interface AlertSummary extends DetectionSummary {
+  readonly alert_type: "ENTRY_NOT_AUTHORIZED";
+  readonly message: string;
+}
+
+export interface PaginatedAlerts {
+  readonly items: ReadonlyArray<AlertSummary>;
+  readonly page: number;
+  readonly page_size: number;
+  readonly total_items: number;
+  readonly total_pages: number;
+  readonly timezone: "UTC";
 }
 
 export interface RecognitionTimings {

@@ -77,8 +77,11 @@ function nullableString(value: unknown): string | null {
 
 function plate(value: unknown): PlateDetection {
   const item = object(value);
+  exact(item, ["bbox", "confidence", "label", "crop"]);
   const bbox = object(item.bbox);
+  exact(bbox, ["x1", "y1", "x2", "y2"]);
   const crop = object(item.crop);
+  exact(crop, ["media_type", "base64_data", "width", "height"]);
   const mediaType = string(crop.media_type);
   if (mediaType !== "image/png") throw new Error("invalid crop media type");
   return {
@@ -101,6 +104,19 @@ function plate(value: unknown): PlateDetection {
 
 function ocr(value: unknown): PlateOcrResponse {
   const item = object(value);
+  exact(item, [
+    "correlation_id",
+    "status",
+    "review_reason",
+    "raw_text",
+    "normalized_text",
+    "confidence",
+    "mode",
+    "inference_ms",
+    "total_ms",
+    "image_width",
+    "image_height",
+  ]);
   const status = string(item.status);
   const mode = string(item.mode);
   const reviewReason = nullableString(item.review_reason);
@@ -132,7 +148,25 @@ function ocr(value: unknown): PlateOcrResponse {
 
 function logging(value: unknown): DetectionLoggingResult {
   const item = object(value);
+  exact(item, [
+    "decision",
+    "status",
+    "failures",
+    "log_persisted",
+    "evidence_available",
+    "completed_at",
+  ]);
   const decision = object(item.decision);
+  exact(decision, [
+    "correlation_id",
+    "decision",
+    "reason",
+    "message",
+    "normalized_plate",
+    "confidence",
+    "vehicle_id",
+    "evaluated_at",
+  ]);
   const decisionStatus = string(decision.decision) as DecisionStatus;
   const reason = string(decision.reason) as DecisionReason;
   const failures = item.failures;
@@ -151,26 +185,9 @@ function logging(value: unknown): DetectionLoggingResult {
   ) {
     throw new Error("invalid logging state");
   }
-  const evidence =
-    item.evidence === null
-      ? null
-      : (() => {
-          const result = object(item.evidence);
-          return {
-            bucket: string(result.bucket),
-            object_path: string(result.object_path),
-          };
-        })();
-  const signedAccess =
-    item.signed_access === null
-      ? null
-      : (() => {
-          const result = object(item.signed_access);
-          return {
-            token: string(result.token),
-            expires_at: string(result.expires_at),
-          };
-        })();
+  if (typeof item.evidence_available !== "boolean") {
+    throw new Error("invalid evidence state");
+  }
   const confidence =
     decision.confidence === null ? null : number(decision.confidence);
   if (confidence !== null && confidence > 1) throw new Error("invalid confidence");
@@ -188,8 +205,7 @@ function logging(value: unknown): DetectionLoggingResult {
     status: status as DetectionLoggingResult["status"],
     failures: failures as LoggingFailureCode[],
     log_persisted: item.log_persisted,
-    evidence,
-    signed_access: signedAccess,
+    evidence_available: item.evidence_available,
     completed_at: string(item.completed_at),
   };
 }
@@ -208,6 +224,7 @@ export function parseRecognitionResponse(value: unknown): RecognitionResponse {
   ]);
   const status = string(item.status);
   const timings = object(item.timings);
+  exact(timings, ["detection_ms", "ocr_ms", "total_ms"]);
   if (!["no_plate_detected", "completed"].includes(status)) {
     throw new Error("invalid recognition status");
   }

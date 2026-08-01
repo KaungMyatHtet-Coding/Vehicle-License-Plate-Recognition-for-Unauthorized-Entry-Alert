@@ -242,7 +242,7 @@ export function RecognitionWorkspace({
                 Processing: {result.timings.total_ms.toFixed(1)} ms · {result.detection_count} plate candidate{result.detection_count === 1 ? "" : "s"}
               </p>
               <p className="mt-1">
-                Evidence: {loggingResult?.evidence ? "stored privately" : "not available"} · Log: {loggingResult?.log_persisted ? "recorded" : "not recorded"}
+                Evidence: {loggingResult?.evidence_available ? "stored privately" : "not available"} · Log: {loggingResult?.log_persisted ? "recorded" : "not recorded"}
               </p>
               {loggingResult?.status === "partial_failure" ? (
                 <p className="mt-2 font-semibold">The decision is unchanged, but some evidence or logging work could not be completed.</p>

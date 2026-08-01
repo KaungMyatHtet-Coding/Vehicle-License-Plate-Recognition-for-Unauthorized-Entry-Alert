@@ -7,13 +7,9 @@ from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings
-from app.repositories.memory import (
-    InMemoryAuthorizedVehicleRepository,
-    InMemoryDetectionLogRepository,
-)
+from app.dependencies import get_application_dependencies
 from app.services.authorization_decision import AuthorizationDecisionService
 from app.services.detection_logging import DetectionLoggingService
-from app.services.evidence_storage import InMemoryEvidenceStorage
 from app.services.ocr_recognition import PlateOcrError, PlateOcrService
 from app.services.plate_detection import PlateDetectionError, PlateDetectionService
 from app.services.image_validation import ImageValidationError, validate_image_upload
@@ -61,14 +57,17 @@ def get_orchestration_service() -> RecognitionOrchestrationService:
         with _orchestration_service_lock:
             if _orchestration_service is None:
                 settings = get_settings()
-                vehicles = InMemoryAuthorizedVehicleRepository()
-                logs = InMemoryDetectionLogRepository()
-                storage = InMemoryEvidenceStorage()
+                dependencies = get_application_dependencies()
                 _orchestration_service = RecognitionOrchestrationService(
                     get_detection_service(),
                     get_ocr_service(),
-                    AuthorizationDecisionService(vehicles, settings),
-                    DetectionLoggingService(logs, storage, settings),
+                    AuthorizationDecisionService(dependencies.vehicles, settings),
+                    DetectionLoggingService(
+                        dependencies.detection_logs,
+                        dependencies.evidence_storage,
+                        settings,
+                    ),
+                    dependencies.recognition_activity,
                 )
     return _orchestration_service
 

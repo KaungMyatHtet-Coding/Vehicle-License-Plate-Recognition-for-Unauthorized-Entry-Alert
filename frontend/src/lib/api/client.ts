@@ -166,8 +166,15 @@ export function createApiClient(
       path: string,
       parse: ResponseParser<T>,
       init: RequestInit = {},
+      query: Readonly<Record<string, string>> = {},
     ): Promise<T> {
-      const requestUrl = buildApiUrl(baseUrl, path);
+      const requestUrl = new URL(buildApiUrl(baseUrl, path));
+      for (const [key, value] of Object.entries(query)) {
+        if (!/^[a-z][a-z0-9_]*$/.test(key) || typeof value !== "string") {
+          throw new ApiConfigurationError();
+        }
+        requestUrl.searchParams.set(key, value);
+      }
       const controller = new AbortController();
       let abortCause: "caller" | "timeout" | null = null;
       const timeout = setTimeout(() => {
@@ -189,7 +196,7 @@ export function createApiClient(
       }
 
       try {
-        const response = await fetch(requestUrl, {
+        const response = await fetch(requestUrl.toString(), {
           ...init,
           headers: {
             Accept: "application/json",
@@ -286,7 +293,8 @@ export const apiClient = {
     path: string,
     parse: ResponseParser<T>,
     init: RequestInit = {},
+    query: Readonly<Record<string, string>> = {},
   ): Promise<T> {
-    return createApiClient().request(path, parse, init);
+    return createApiClient().request(path, parse, init, query);
   },
 };

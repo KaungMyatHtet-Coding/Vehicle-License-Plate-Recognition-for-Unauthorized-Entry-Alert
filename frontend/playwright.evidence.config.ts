@@ -2,6 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests/evidence",
+  testMatch: "day13-recognition.spec.ts",
   fullyParallel: false,
   forbidOnly: true,
   retries: 0,

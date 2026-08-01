@@ -82,11 +82,7 @@ async function completedResponse(decision: Decision) {
       status: "completed",
       failures: [],
       log_persisted: true,
-      evidence: {
-        bucket: "redacted-private-bucket",
-        object_path: "redacted/private-object.jpg",
-      },
-      signed_access: null,
+      evidence_available: true,
       completed_at: "2026-08-04T09:00:01Z",
     },
     timings: {

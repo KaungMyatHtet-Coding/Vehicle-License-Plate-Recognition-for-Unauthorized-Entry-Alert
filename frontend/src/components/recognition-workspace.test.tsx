@@ -64,11 +64,7 @@ function response(
       status: "completed",
       failures: [],
       log_persisted: true,
-      evidence: {
-        bucket: "detection-evidence",
-        object_path: "private/evidence.jpg",
-      },
-      signed_access: null,
+      evidence_available: true,
       completed_at: "2026-08-04T09:00:01Z",
     },
     timings: { detection_ms: 2, ocr_ms: 4, total_ms: 7 },

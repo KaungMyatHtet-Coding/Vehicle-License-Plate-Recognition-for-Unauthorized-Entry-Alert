@@ -202,6 +202,52 @@ class InMemoryDetectionLogRepository:
                 )
             self._records[record.correlation_id] = stored
 
+    def list_all(self) -> tuple[DetectionLogRecord, ...]:
+        """Return defensive copies with deterministic newest-first ordering."""
+
+        with self._lock:
+            records = [
+                replace(item, timings=deepcopy(item.timings))
+                for item in self._records.values()
+            ]
+        return tuple(
+            sorted(
+                records,
+                key=lambda item: (item.created_at, str(item.correlation_id)),
+                reverse=True,
+            )
+        )
+
+
+class InMemoryRecognitionActivityRepository:
+    """Retain process-local no-plate outcomes for authoritative statistics."""
+
+    def __init__(self) -> None:
+        self._records: dict[UUID, datetime] = {}
+        self._lock = threading.RLock()
+
+    def add_no_plate(self, correlation_id: UUID, created_at: datetime) -> None:
+        if not isinstance(correlation_id, UUID):
+            raise RepositoryError(
+                "REPOSITORY_CORRELATION_INVALID",
+                "The correlation identifier is invalid.",
+            )
+        _validate_timestamp(created_at, "created_at")
+        with self._lock:
+            if correlation_id in self._records:
+                raise RepositoryError(
+                    "REPOSITORY_CORRELATION_DUPLICATE",
+                    "The correlation identifier already exists.",
+                )
+            self._records[correlation_id] = created_at
+
+    def list_no_plate(self) -> tuple[tuple[UUID, datetime], ...]:
+        with self._lock:
+            records = tuple(self._records.items())
+        return tuple(
+            sorted(records, key=lambda item: (item[1], str(item[0])), reverse=True)
+        )
+
 
 class InMemorySettingsRepository:
     """Store copied JSON-compatible settings without credentials or network I/O."""

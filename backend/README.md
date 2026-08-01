@@ -192,6 +192,30 @@ The default Day 13 repositories/storage are process-local and network-free;
 live Supabase persistence remains deferred. See
 [`docs/recognition_interface.md`](../docs/recognition_interface.md).
 
+The public recognition response exposes only `evidence_available`; private
+bucket/object coordinates and signed grants remain inside trusted backend
+boundaries.
+
+## Dashboard, history, and alerts
+
+Day 14 adds sanitized `GET /api/detections`,
+`GET /api/detections/{correlation_id}`, `GET /api/dashboard/statistics`, and
+`GET /api/alerts` endpoints. History supports bounded pagination, exact
+decision/normalized-plate filters, and timezone-aware date bounds. Statistics
+and alert selection are performed by the backend; trends use seven UTC calendar
+days. Evidence is availability metadata only because authentication and
+role-aware access are not implemented.
+
+No-plate activity ledger failures do not change the recognition outcome. They
+emit a warning containing only the correlation ID and stable
+`NO_PLATE_ACTIVITY_PERSISTENCE_FAILED` category, never the raw exception or
+private storage information.
+
+Recognition and read routes share one locked process-local dependency
+container. Restarting the backend may clear all records. This is not live
+Supabase persistence. See
+[`docs/dashboard_history_alerts.md`](../docs/dashboard_history_alerts.md).
+
 ## Windows PowerShell setup
 
 Run these commands from the repository root (`D:\CVPX`):
