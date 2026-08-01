@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-import { FoundationPanel, PageHeader } from "@/components/page-layout";
+import { PageHeader } from "@/components/page-layout";
+import { HistoryView } from "@/components/operational-views";
 
 export const metadata: Metadata = {
   title: "Detection history",
@@ -12,12 +13,9 @@ export default function HistoryPage() {
       <PageHeader
         eyebrow="Audit trail"
         title="Detection history"
-        description="A safe placeholder for paginated, server-derived detection records planned for Day 14."
+        description="Paginated, filtered detection records with sanitized detail and restricted evidence metadata."
       />
-      <FoundationPanel
-        title="No history loaded"
-        description="The browser has not requested detection metadata or private evidence."
-      />
+      <HistoryView />
     </div>
   );
 }

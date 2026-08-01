@@ -11,8 +11,9 @@ for:
 - `/authorized-vehicles`
 
 Day 13 replaces the Recognition placeholder with a complete still-image
-selection, preview, submission, result, failure, and reset workflow. Dashboard,
-history, alerts, and vehicle-management routes remain foundation-only.
+workflow. Day 14 adds server-derived dashboard statistics, filtered/paginated
+history and detail, and backend-selected alerts. Vehicle management remains a
+foundation-only route.
 
 ## Local setup
 
@@ -51,6 +52,7 @@ npm.cmd run lint
 npm.cmd run type-check
 npm.cmd run build
 npm.cmd run evidence:day13
+npm.cmd run evidence:day14
 npm.cmd audit
 ```
 
@@ -72,3 +74,17 @@ The evidence command uses the installed system Chrome and deterministic
 request interception to regenerate the six UI-state screenshots in
 `docs/evidence/day13/`. It is development evidence only and does not bypass or
 modify production recognition behavior.
+
+Day 14 operational responses are runtime-validated and expose evidence only as
+an availability boolean. History is process-local and volatile; restarting the
+backend may clear it. Live Supabase persistence and authenticated evidence
+access remain unimplemented.
+Completed recognition parsing rejects unexpected fields at every nested public
+object boundary and has direct parser coverage for every supported decision
+outcome. History detail failures and invalid filters use sanitized accessible
+feedback without clearing the history list.
+
+`npm.cmd run evidence:day14` verifies the deterministic Day 14 Playwright
+states without changing screenshots. To intentionally capture them in
+PowerShell, set `$env:CVPX_CAPTURE_DAY14_EVIDENCE='1'` for that command and
+remove the environment variable afterward.

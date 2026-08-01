@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "evidence:day13": "playwright test --config=playwright.evidence.config.ts",
+    "evidence:day14": "playwright test --config=playwright.day14.config.ts",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",

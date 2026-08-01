@@ -122,6 +122,12 @@ failures, compensating cleanup, and opaque short-lived signed access. See
 Day 12 establishes five responsive frontend routes, accessible loading/error
 primitives, and a sanitized environment-based typed API client. See
 [the frontend foundation](docs/frontend_foundation.md).
+Day 13 connects the authoritative still-image workflow. Day 14 adds sanitized,
+server-derived dashboard totals/trends, paginated and filtered process-local
+history/detail, and backend-selected unauthorized alerts. Evidence is exposed
+only as availability metadata; live Supabase persistence, authentication, and
+evidence delivery remain unimplemented. See
+[the Day 14 operational contract](docs/dashboard_history_alerts.md).
 Deadline: **August 15, 2026**.
 
 ## Documentation

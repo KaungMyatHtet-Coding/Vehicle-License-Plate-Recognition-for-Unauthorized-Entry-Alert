@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-import { FoundationPanel, PageHeader } from "@/components/page-layout";
+import { PageHeader } from "@/components/page-layout";
+import { AlertsView } from "@/components/operational-views";
 
 export const metadata: Metadata = {
   title: "Alerts",
@@ -12,12 +13,9 @@ export default function AlertsPage() {
       <PageHeader
         eyebrow="Review queue"
         title="Alerts"
-        description="A non-accusatory foundation for future operational alerts and manual-review states."
+        description="Backend-selected unauthorized outcomes for non-accusatory operator review."
       />
-      <FoundationPanel
-        title="No alert feed connected"
-        description="Day 12 sends no notifications and does not interpret an unauthorized result as proof of wrongdoing."
-      />
+      <AlertsView />
     </div>
   );
 }

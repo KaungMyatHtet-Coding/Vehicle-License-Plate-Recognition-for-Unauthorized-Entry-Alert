@@ -9,6 +9,7 @@ from starlette.exceptions import HTTPException
 
 from app.api.routes.health import router as health_router
 from app.api.routes.recognition import router as recognition_router
+from app.api.routes.operations import router as operations_router
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -74,3 +75,4 @@ async def api_information() -> dict[str, str]:
 
 app.include_router(health_router)
 app.include_router(recognition_router, prefix="/api")
+app.include_router(operations_router, prefix="/api")

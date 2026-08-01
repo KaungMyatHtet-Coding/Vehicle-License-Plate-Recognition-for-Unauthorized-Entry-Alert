@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 from app.schemas.detection import PlateDetectionResponse
-from app.schemas.logging import DetectionLoggingResult
+from app.schemas.logging import DecisionAuditSnapshot, LoggingFailureCode
 from app.schemas.ocr import PlateOcrResponse
 
 
@@ -19,6 +19,19 @@ class RecognitionTimings(BaseModel):
     total_ms: float
 
 
+class PublicLoggingResult(BaseModel):
+    """Sanitized logging outcome without private storage coordinates or grants."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    decision: DecisionAuditSnapshot
+    status: Literal["completed", "partial_failure"]
+    failures: tuple[LoggingFailureCode, ...]
+    log_persisted: bool
+    evidence_available: bool
+    completed_at: str
+
+
 class RecognitionResponse(BaseModel):
     """One authoritative no-plate or decided recognition outcome."""
 
@@ -30,5 +43,5 @@ class RecognitionResponse(BaseModel):
     detection_count: int
     selected_plate: PlateDetectionResponse | None
     ocr: PlateOcrResponse | None
-    logging: DetectionLoggingResult | None
+    logging: PublicLoggingResult | None
     timings: RecognitionTimings

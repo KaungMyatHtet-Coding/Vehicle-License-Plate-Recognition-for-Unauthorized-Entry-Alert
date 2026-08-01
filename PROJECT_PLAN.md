@@ -401,6 +401,8 @@ npm run build
 **Acceptance/evidence:** Seeded records produce correct filters/totals; unauthorized alerts are visually distinct; empty and failed queries are safe.  
 **Recommended commit:** `feat: add dashboard history and alerts`
 
+**Day 14 status:** Completed on August 5, 2026 on `feat/dashboard-history`. Evidence: shared locked process-local dependencies; sanitized paginated/filterable history and restricted detail with explicit failure states; seven-day UTC server-derived totals/trends including no-plate activity; backend-selected non-accusatory alerts; fail-closed privacy-hardened Day 13 response parsing at every nested public object boundary; accessible invalid-filter feedback; safe no-plate ledger failure observability; 18 focused, 214 backend, 273 repository-wide, and 125 frontend tests; Ruff lint/format, schema validation, frontend lint/type-check/build, zero-vulnerability npm audit, and eight inspected deterministic UI-state screenshots. Storage remains volatile and network-free; live Supabase persistence, authentication, and evidence delivery are not implemented.
+
 ### Day 15 — August 6, 2026 — Authorized-vehicle management
 
 **Branch:** `feat/vehicle-management`  

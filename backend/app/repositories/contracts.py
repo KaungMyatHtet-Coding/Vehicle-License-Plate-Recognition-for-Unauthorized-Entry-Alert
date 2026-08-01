@@ -86,6 +86,16 @@ class DetectionLogRepository(Protocol):
 
     def add(self, record: DetectionLogRecord) -> None: ...
 
+    def list_all(self) -> tuple[DetectionLogRecord, ...]: ...
+
+
+class RecognitionActivityRepository(Protocol):
+    """Process-local ledger for outcomes that do not create detection logs."""
+
+    def add_no_plate(self, correlation_id: UUID, created_at: datetime) -> None: ...
+
+    def list_no_plate(self) -> tuple[tuple[UUID, datetime], ...]: ...
+
 
 class SettingsRepository(Protocol):
     """Server-setting boundary; values are never client credentials."""
