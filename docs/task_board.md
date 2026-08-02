@@ -15,7 +15,6 @@ A task may move to Completed only when its scoped files exist, applicable verifi
 | Date | Milestone | Owner | Required evidence |
 |---|---|---|---|
 | Aug 8 | Optional bounded video | Project developer | Limit/duplicate tests or honest deferral |
-| Aug 9 | Local webcam demo | Project developer | Local start/stop/unavailable-camera evidence |
 | Aug 10 | Free-tier deployment | Project developer | Public health and image-flow timestamps |
 | Aug 11 | Reproducible evaluation | Project developer | Raw per-sample and regenerated aggregate output |
 | Aug 12 | Online QA/security | Project developer | Release checklist and secret/security review |
@@ -51,6 +50,7 @@ None.
 | Aug 6 | Authorized vehicles | Project developer | Validated process-local create/read/update/status APIs and connected UI; normalized uniqueness; search/status filters; timezone-aware validity; ACTIVE/INACTIVE/BLOCKED handling; confirmations without destructive deletion; decision integration and sanitized-error tests; 5 focused/219 full backend and 8 focused/133 full frontend tests; Ruff, ESLint, TypeScript, and production build pass; persistence limitation documented |
 | Aug 7 | Core integration freeze | Project developer | Dedicated end-to-end integration test suite covering input validation -> detection -> OCR -> decision -> logging -> operational views & security alerts; fail-closed verification for unknown, BLOCKED, INACTIVE, EXPIRED, NOT_YET_VALID, low confidence, and no-plate cases; 287 backend pytest, 133 frontend vitest, Ruff lint/format, ESLint, TypeScript, and Next.js build pass cleanly; P0 scope frozen |
 | Aug 8 | Optional short video | Project developer | Reused still-image recognition pipeline across frame-sampled short video files; enforced size (<=25MB), duration (<=10s), format (.mp4/.avi/.mov) limits; 3.0s duplicate suppression; 4 focused/291 full backend tests, CLI smoke script, Ruff, ESLint, TypeScript, and Next.js production build pass cleanly |
+| Aug 9 | Local webcam demo | Project developer | Isolated standalone `scripts/run_webcam.py` with `--camera`, `--fps`, `--cooldown`; bounding-box overlays; FPS/latency HUD; 3s duplicate suppression; camera-unavailable error handling (exit 1, no crash); Q/Ctrl+C safe stop; server-independence invariant verified; 7 focused/298 full backend tests, Ruff lint/format pass cleanly |
 
 ## Blocked
 
