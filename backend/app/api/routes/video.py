@@ -1,0 +1,93 @@
+"""Day 17 API router for bounded short video processing."""
+
+from __future__ import annotations
+
+import logging
+from uuid import uuid4
+
+from fastapi import APIRouter, Depends, Header, UploadFile, status
+from fastapi.responses import JSONResponse
+
+from app.api.routes.recognition import get_orchestration_service
+from app.schemas.video import VideoProcessingResponse
+from app.services.recognition_orchestration import RecognitionOrchestrationService
+from app.services.video_processing import VideoProcessingService, VideoValidationError
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(tags=["video"])
+
+
+@router.post(
+    "/analyze-video",
+    response_model=VideoProcessingResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def analyze_video(
+    file: UploadFile,
+    x_correlation_id: str | None = Header(default=None),
+    orch_svc: RecognitionOrchestrationService = Depends(get_orchestration_service),
+) -> VideoProcessingResponse | JSONResponse:
+    """Analyze a bounded short video file frame by frame for license plates."""
+    correlation_id = x_correlation_id or str(uuid4())
+    filename = file.filename or "video.mp4"
+
+    try:
+        content = await file.read()
+    except Exception as exc:
+        logger.warning(
+            "Video file read failed for correlation_id=%s filename=%s error=%s",
+            correlation_id,
+            filename,
+            exc,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "error": {
+                    "code": "VIDEO_READ_FAILED",
+                    "message": "Failed to read the uploaded video file.",
+                    "correlation_id": correlation_id,
+                }
+            },
+        )
+
+    svc = VideoProcessingService(orchestration=orch_svc)
+    try:
+        return svc.process_video(
+            video_bytes=content, filename=filename, correlation_id=correlation_id
+        )
+    except VideoValidationError as err:
+        logger.info(
+            "Video validation failed code=%s message=%s correlation_id=%s",
+            err.code,
+            err.message,
+            correlation_id,
+        )
+        return JSONResponse(
+            status_code=err.status_code,
+            content={
+                "error": {
+                    "code": err.code,
+                    "message": err.message,
+                    "correlation_id": correlation_id,
+                }
+            },
+        )
+    except Exception as exc:
+        logger.error(
+            "Unhandled video processing error correlation_id=%s error=%s",
+            correlation_id,
+            exc,
+            exc_info=True,
+        )
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "error": {
+                    "code": "INTERNAL_VIDEO_ERROR",
+                    "message": "An unexpected error occurred during video processing.",
+                    "correlation_id": correlation_id,
+                }
+            },
+        )

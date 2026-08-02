@@ -11,6 +11,7 @@ from app.api.routes.health import router as health_router
 from app.api.routes.recognition import router as recognition_router
 from app.api.routes.operations import router as operations_router
 from app.api.routes.vehicles import router as vehicles_router
+from app.api.routes.video import router as video_router
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -78,3 +79,4 @@ app.include_router(health_router)
 app.include_router(recognition_router, prefix="/api")
 app.include_router(operations_router, prefix="/api")
 app.include_router(vehicles_router, prefix="/api")
+app.include_router(video_router, prefix="/api/recognition")
