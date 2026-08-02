@@ -88,3 +88,7 @@ feedback without clearing the history list.
 states without changing screenshots. To intentionally capture them in
 PowerShell, set `$env:CVPX_CAPTURE_DAY14_EVIDENCE='1'` for that command and
 remove the environment variable afterward.
+
+The Day 15 Authorized vehicles route supports create, search, status filter, confirmed
+edit/status operations, and optional validity dates through sanitized backend APIs. It
+contains no service credential and inherits the backend's process-local limitation.

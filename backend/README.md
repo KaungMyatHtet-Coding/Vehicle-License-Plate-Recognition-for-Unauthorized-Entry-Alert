@@ -291,3 +291,8 @@ the environment; in that case use `python -m uvicorn app.main:app` and
 The virtual environment and `.env` files are local-only and ignored by Git.
 Copy `backend\.env.example` to `backend\.env` only for local development;
 the example contains no secrets. No deployment is configured by Day 2.
+
+Day 15 exposes process-local authorized-vehicle management under
+`/api/authorized-vehicles`. Normalization, uniqueness, validity, status, and later
+authorization decisions remain backend-owned. See
+`docs/authorized_vehicle_management.md`. This is not durable Supabase persistence.

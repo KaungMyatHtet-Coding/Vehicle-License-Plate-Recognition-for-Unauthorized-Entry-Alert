@@ -102,6 +102,50 @@ class InMemoryAuthorizedVehicleRepository:
                 )
             self._records[record.normalized_plate] = record
 
+    def get_by_id(self, vehicle_id: UUID) -> AuthorizedVehicleRecord | None:
+        with self._lock:
+            return next(
+                (
+                    record
+                    for record in self._records.values()
+                    if record.id == vehicle_id
+                ),
+                None,
+            )
+
+    def list_all(self) -> tuple[AuthorizedVehicleRecord, ...]:
+        with self._lock:
+            return tuple(
+                sorted(
+                    self._records.values(),
+                    key=lambda item: (item.normalized_plate, str(item.id)),
+                )
+            )
+
+    def update(self, record: AuthorizedVehicleRecord) -> None:
+        with self._lock:
+            previous = next(
+                (item for item in self._records.values() if item.id == record.id), None
+            )
+            if previous is None:
+                raise RepositoryError(
+                    "REPOSITORY_VEHICLE_NOT_FOUND", "The vehicle record does not exist."
+                )
+            if (
+                record.normalized_plate != previous.normalized_plate
+                and record.normalized_plate in self._records
+            ):
+                raise RepositoryError(
+                    "REPOSITORY_PLATE_DUPLICATE", "The normalized plate already exists."
+                )
+            # Reuse all validation and uniqueness rules without exposing a partial update.
+            del self._records[previous.normalized_plate]
+            try:
+                self.add(record)
+            except Exception:
+                self._records[previous.normalized_plate] = previous
+                raise
+
 
 class InMemoryDetectionLogRepository:
     """Retain validated OCR logs without performing decisions or I/O."""
