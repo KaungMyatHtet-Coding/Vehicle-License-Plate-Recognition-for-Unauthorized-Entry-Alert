@@ -119,11 +119,22 @@ def generate_test_video_bytes(duration_sec: float = 2.0, fps: int = 10) -> bytes
 @pytest.fixture(autouse=True)
 def reset_dependencies() -> Generator[None, None, None]:
     deps = get_application_dependencies()
-    deps.vehicles._records.clear()
-    deps.detection_logs._records.clear()
-    deps.recognition_activity._records.clear()
-    deps.evidence_storage._objects.clear()
-    deps.evidence_storage._grants.clear()
+    if hasattr(deps.vehicles, "clear"):
+        deps.vehicles.clear()
+    elif hasattr(deps.vehicles, "_records"):
+        deps.vehicles._records.clear()
+
+    if hasattr(deps.detection_logs, "clear"):
+        deps.detection_logs.clear()
+    elif hasattr(deps.detection_logs, "_records"):
+        deps.detection_logs._records.clear()
+
+    if hasattr(deps.recognition_activity, "_records"):
+        deps.recognition_activity._records.clear()
+    if hasattr(deps.evidence_storage, "_objects"):
+        deps.evidence_storage._objects.clear()
+    if hasattr(deps.evidence_storage, "_grants"):
+        deps.evidence_storage._grants.clear()
     yield
     app.dependency_overrides.clear()
 
