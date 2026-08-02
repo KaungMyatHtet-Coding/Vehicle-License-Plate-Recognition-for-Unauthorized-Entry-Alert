@@ -1,13 +1,15 @@
 """Day 18 tests for local webcam demonstration script.
 
-These tests verify camera-unavailable handling, safe stop, argument parsing,
-and server-independence invariants WITHOUT requiring a physical camera.
+These tests verify camera-unavailable handling, server-unavailable handling,
+safe stop, argument parsing, and server-independence invariants WITHOUT
+requiring a physical camera or a running backend server.
 """
 
 from __future__ import annotations
 
 import sys
 import os
+from unittest.mock import patch
 
 # Ensure scripts/ is importable
 _SCRIPTS = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts"))
@@ -18,7 +20,11 @@ for _p in (_SCRIPTS, _BACKEND):
 
 import pytest  # noqa: E402
 
-from run_webcam import CameraUnavailableError, WebcamRunner, parse_args  # noqa: E402
+from run_webcam import (  # noqa: E402
+    CameraUnavailableError,
+    WebcamRunner,
+    parse_args,
+)
 
 
 def test_parse_args_defaults() -> None:
@@ -27,14 +33,27 @@ def test_parse_args_defaults() -> None:
     assert args.camera == 0
     assert args.fps == 2.0
     assert args.cooldown == 3.0
+    assert args.api_url == "http://127.0.0.1:8000"
 
 
 def test_parse_args_custom_values() -> None:
-    """parse_args accepts --camera, --fps, --cooldown overrides."""
-    args = parse_args(["--camera", "1", "--fps", "5.0", "--cooldown", "2.5"])
+    """parse_args accepts --camera, --fps, --cooldown, --api-url overrides."""
+    args = parse_args(
+        [
+            "--camera",
+            "1",
+            "--fps",
+            "5.0",
+            "--cooldown",
+            "2.5",
+            "--api-url",
+            "http://localhost:9000",
+        ]
+    )
     assert args.camera == 1
     assert args.fps == 5.0
     assert args.cooldown == 2.5
+    assert args.api_url == "http://localhost:9000"
 
 
 def test_open_camera_unavailable_raises() -> None:
@@ -46,10 +65,19 @@ def test_open_camera_unavailable_raises() -> None:
     assert "unavailable" in str(exc_info.value).lower()
 
 
+def test_run_returns_1_when_server_unavailable() -> None:
+    """run() returns exit code 1 when the backend server is unreachable."""
+    runner = WebcamRunner(camera_index=0, api_base_url="http://127.0.0.1:19999")
+    result = runner.run()
+    assert result == 1
+
+
 def test_run_returns_1_when_camera_unavailable() -> None:
     """run() returns exit code 1 when the camera cannot be opened."""
     runner = WebcamRunner(camera_index=9999)
-    result = runner.run()
+    # Mock _check_server so it doesn't fail before camera check
+    with patch.object(runner, "_check_server", return_value=None):
+        result = runner.run()
     assert result == 1
 
 
