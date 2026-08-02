@@ -424,6 +424,13 @@ npm run build
 **Acceptance/evidence:** Create/update/duplicate/block/expiry tests pass, and changing a record changes a later decision as specified.  
 **Recommended commit:** `feat: add authorized vehicle management`
 
+**Day 15 status:** Completed on August 6, 2026 on
+`feat/authorized-vehicle-management`. Evidence: validated process-local create/read/
+update/status APIs; normalized uniqueness; timezone-aware validity; status filtering;
+confirmed non-destructive UI actions; exact public parsing; and deterministic tests
+proving a status change affects the next authoritative decision. Errors are sanitized
+and no live Supabase persistence is claimed.
+
 ### Day 16 — August 7, 2026 — Core integration freeze
 
 **Branch:** `test/system-integration`  

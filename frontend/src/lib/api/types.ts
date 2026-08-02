@@ -199,3 +199,29 @@ export interface RecognitionResponse {
   readonly logging: DetectionLoggingResult | null;
   readonly timings: RecognitionTimings;
 }
+
+export type VehicleStatus = "ACTIVE" | "INACTIVE" | "BLOCKED";
+
+export interface AuthorizedVehicle {
+  readonly id: string;
+  readonly normalized_plate: string;
+  readonly description: string | null;
+  readonly status: VehicleStatus;
+  readonly valid_from: string | null;
+  readonly valid_until: string | null;
+  readonly created_at: string;
+  readonly updated_at: string;
+}
+
+export interface AuthorizedVehicleList {
+  readonly items: ReadonlyArray<AuthorizedVehicle>;
+  readonly total_items: number;
+}
+
+export interface VehicleWrite {
+  readonly plate_number: string;
+  readonly description: string | null;
+  readonly status: VehicleStatus;
+  readonly valid_from: string | null;
+  readonly valid_until: string | null;
+}

@@ -14,7 +14,6 @@ A task may move to Completed only when its scoped files exist, applicable verifi
 
 | Date | Milestone | Owner | Required evidence |
 |---|---|---|---|
-| Aug 6 | Authorized vehicles | Project developer | CRUD/status/decision integration evidence |
 | Aug 7 | Core integration freeze | Project developer | Repeated end-to-end image smoke tests |
 | Aug 8 | Optional bounded video | Project developer | Limit/duplicate tests or honest deferral |
 | Aug 9 | Local webcam demo | Project developer | Local start/stop/unavailable-camera evidence |
@@ -50,6 +49,7 @@ None.
 | Aug 3 | Frontend foundation | Project developer | Next.js App Router with strict TypeScript/Tailwind; responsive accessible navigation and five route layouts; typed sanitized environment-based API client; focused tests, lint, type-check, production build, route smoke, and clean dependency audit |
 | Aug 4 | Recognition interface | Project developer | Authoritative full-pipeline endpoint; accessible upload/preview/result/reset workflow; deterministic backend/frontend state tests; six inspected 1440×1100 Playwright/system-Chrome screenshots under `docs/evidence/day13/`; interception evidence labeled as frontend rendering rather than live OCR |
 | Aug 5 | Dashboard/history/alerts | Project developer | Shared process-local dependency boundary; sanitized history/detail/statistics/alerts APIs; explicit detail failure and invalid-filter states; backend-derived decisions, UTC trends, and alert selection; fail-closed nested public parsing and restricted evidence metadata; safe no-plate failure warning; 18 focused, 214 backend, 273 full, and 125 frontend tests; lint/format/type-check/build/schema/audit; eight inspected rendering-only screenshots under `docs/evidence/day14/` |
+| Aug 6 | Authorized vehicles | Project developer | Validated process-local create/read/update/status APIs and connected UI; normalized uniqueness; search/status filters; timezone-aware validity; ACTIVE/INACTIVE/BLOCKED handling; confirmations without destructive deletion; decision integration and sanitized-error tests; 5 focused/219 full backend and 8 focused/133 full frontend tests; Ruff, ESLint, TypeScript, and production build pass; persistence limitation documented |
 
 ## Blocked
 

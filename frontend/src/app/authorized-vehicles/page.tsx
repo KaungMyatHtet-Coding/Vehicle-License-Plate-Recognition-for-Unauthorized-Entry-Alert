@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-import { FoundationPanel, PageHeader } from "@/components/page-layout";
+import { PageHeader } from "@/components/page-layout";
+import { VehicleManagement } from "@/components/vehicle-management";
 
 export const metadata: Metadata = {
   title: "Authorized vehicles",
@@ -12,12 +13,9 @@ export default function AuthorizedVehiclesPage() {
       <PageHeader
         eyebrow="Vehicle records"
         title="Authorized vehicles"
-        description="The responsive route is established. Search, validation, and record management remain Day 15 work."
+        description="Manage normalized allowlist records, validity windows, and entry-decision status without exposing server credentials."
       />
-      <FoundationPanel
-        title="Management tools not connected"
-        description="No database connection or browser credential is present in this frontend foundation."
-      />
+      <VehicleManagement />
     </div>
   );
 }
