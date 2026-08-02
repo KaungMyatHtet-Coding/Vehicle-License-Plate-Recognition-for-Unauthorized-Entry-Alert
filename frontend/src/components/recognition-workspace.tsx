@@ -165,7 +165,7 @@ export function RecognitionWorkspace({
             type="button"
             onClick={submit}
             disabled={!file || disabled || !ACCEPTED_TYPES.has(file.type)}
-            className="min-h-11 rounded-md bg-[var(--brand)] px-5 py-2 font-semibold text-white hover:bg-[var(--brand-strong)] disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="min-h-11 rounded-md bg-[var(--brand)] px-5 py-2 font-semibold text-white transition-colors hover:bg-[var(--brand-strong)] focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
             {disabled ? "Analyzing…" : "Analyze image"}
           </button>
@@ -174,7 +174,7 @@ export function RecognitionWorkspace({
               type="button"
               onClick={reset}
               disabled={disabled}
-              className="min-h-11 rounded-md border border-slate-300 bg-white px-5 py-2 font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60"
+              className="min-h-11 rounded-md border border-slate-300 bg-white px-5 py-2 font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 disabled:opacity-60"
             >
               {result ? "Analyze another image" : "Remove image"}
             </button>

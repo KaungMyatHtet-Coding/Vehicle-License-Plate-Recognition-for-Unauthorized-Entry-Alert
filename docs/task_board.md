@@ -15,7 +15,6 @@ A task may move to Completed only when its scoped files exist, applicable verifi
 | Date | Milestone | Owner | Required evidence |
 |---|---|---|---|
 | Aug 8 | Optional bounded video | Project developer | Limit/duplicate tests or honest deferral |
-| Aug 13 | UI/accessibility polish | Project developer | Checks/build and keyboard/responsive evidence |
 | Aug 14 | Deliverables/rehearsal | Project developer | Reconciled report, demo checklist, backup |
 | Aug 15 | Final verification/submission | Project developer | Full verification and deliverable checklist |
 
@@ -51,6 +50,7 @@ None.
 | Aug 10 | Free-tier deployment | Project developer | Dockerfile, render.yaml blueprint, Supabase SQL migration script, secret-free deployment guide (`docs/deployment.md`); 6 focused/304 full backend tests, Ruff lint/format, Vitest (133/133), ESLint, TypeScript, and Next.js production build pass cleanly |
 | Aug 11 | Reproducible evaluation | Project developer | Reproducible system evaluator `scripts/evaluate_system.py`, Levenshtein distance & character accuracy, JSON/Markdown evaluation reports under `artifacts/evaluation/`; 4 focused/308 full backend tests, Ruff lint/format, Vitest (133/133), ESLint, TypeScript, and Next.js production build pass cleanly |
 | Aug 12 | Online QA/security | Project developer | Online security & hardening tests `backend/tests/test_online_hardening.py`, secret scanner, payload size limit enforcement, error response sanitization, release QA checklist (`docs/release_qa_checklist.md`); 5 focused/313 full backend tests, Ruff lint/format, Vitest (133/133), ESLint, TypeScript, and Next.js production build pass cleanly |
+| Aug 13 | UI/accessibility polish | Project developer | Accessible focus-visible ring styles, ARIA labels, EmptyState feedback components across all 5 routes, mobile responsive layout checks; 313 backend pytest, Vitest (133/133), ESLint, TypeScript, and Next.js production build pass cleanly |
 
 ## Blocked
 
