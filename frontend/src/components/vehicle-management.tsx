@@ -8,8 +8,10 @@ import type { AuthorizedVehicle, VehicleStatus, VehicleWrite } from "@/lib/api/t
 import { ErrorState, LoadingState } from "@/components/feedback";
 import { FoundationPanel } from "@/components/page-layout";
 
-const button = "min-h-11 rounded-md bg-slate-900 px-4 py-2 font-semibold text-white disabled:opacity-50";
-const input = "mt-2 block min-h-11 w-full rounded-md border px-3";
+const button =
+  "min-h-11 rounded-md bg-slate-900 px-4 py-2 font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 disabled:opacity-50";
+const input =
+  "mt-2 block min-h-11 w-full rounded-md border border-slate-300 px-3 transition-colors focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20";
 
 export function VehicleManagement() {
   const [items, setItems] = useState<ReadonlyArray<AuthorizedVehicle>>([]);

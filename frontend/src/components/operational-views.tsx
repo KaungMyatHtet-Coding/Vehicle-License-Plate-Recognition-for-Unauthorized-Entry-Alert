@@ -9,7 +9,8 @@ import { ApiRequestError } from "@/lib/api/client";
 import type { DashboardStatistics, DetectionDetail, PaginatedAlerts, PaginatedDetections } from "@/lib/api/types";
 
 const utc = (value: string) => `${new Intl.DateTimeFormat("en-GB", { year: "numeric", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }).format(new Date(value))} UTC`;
-const button = "min-h-11 rounded-md bg-slate-900 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50";
+const button =
+  "min-h-11 rounded-md bg-slate-900 px-4 py-2 font-semibold text-white transition-colors hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
 function useLoad<T>(loader: (signal: AbortSignal) => Promise<T>, dependencies: readonly unknown[]) {
   const [state, setState] = useState<{ data: T | null; error: boolean; loading: boolean }>({ data: null, error: false, loading: true });

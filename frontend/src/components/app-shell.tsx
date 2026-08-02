@@ -54,7 +54,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
                   <Link
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    className={`block rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                    className={`block rounded-md px-3 py-2.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
                       active
                         ? "bg-teal-700 text-white"
                         : "text-slate-300 hover:bg-slate-800 hover:text-white"
