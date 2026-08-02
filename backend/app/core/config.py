@@ -19,6 +19,13 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    supabase_url: str | None = Field(
+        default=None, validation_alias="NEXT_PUBLIC_SUPABASE_URL"
+    )
+    supabase_service_role_key: str | None = Field(
+        default=None, validation_alias="SUPABASE_SERVICE_ROLE_KEY"
+    )
+
     project_title: str = Field(
         default="Vehicle License Plate Recognition for Unauthorized Entry Alert",
         validation_alias="PROJECT_TITLE",
