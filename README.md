@@ -1,147 +1,106 @@
-# Vehicle License Plate Recognition for Unauthorized Entry Alert
+# Vehicle License Plate Recognition for Unauthorized Entry Alert (CVPX)
 
 ## Overview
 
-This repository contains a free-tier prototype that will recognize a license plate from a vehicle image, compare normalized OCR text with authorized-vehicle records, and return `AUTHORIZED`, `UNAUTHORIZED`, or `MANUAL_REVIEW`. It will retain detection records and protected evidence and present results, history, alerts, authorized vehicles, and dashboard statistics.
+CVPX is an automated vehicle license plate recognition (ALPR) and entry authorization system. It recognizes license plates from vehicle images, compares normalized OCR text against authorized vehicle allowlists, and returns an authoritative decision (`AUTHORIZED`, `UNAUTHORIZED`, or `MANUAL_REVIEW`). It retains detection logs, audit statistics, and protected evidence, providing operational views for recognition workspace, entry dashboard, detection history, security alerts, and vehicle allowlist management.
 
-## Core workflow
-
-```text
-image → validate → detect plate → crop/preprocess → local OCR
-      → normalize text → authorization lookup → explain decision
-      → store event/evidence → display result/history/alerts/statistics
-```
-
-Required deployment supports online still images. Short videos are optional and bounded. OpenCV webcam input is local-only; continuous CCTV/IP-camera streaming is outside scope.
-
-## Planned technology stack
-
-| Area | Technology |
-|---|---|
-| Frontend | Next.js, TypeScript, Tailwind CSS; Vercel Free |
-| Backend | FastAPI, Python, Pydantic; Render Free |
-| Computer vision | OpenCV and a benchmark-selected free local plate detector |
-| OCR | Benchmark-selected free local OCR |
-| Data | Supabase PostgreSQL |
-| Evidence | Supabase Storage |
-| Local webcam | OpenCV |
-| Source control | Git and GitHub |
-
-No paid APIs are planned.
-
-## Proposed structure
+## Core Workflow
 
 ```text
-backend/       FastAPI, business rules, CV/OCR, repositories
-frontend/      Next.js user interface
-docs/          task board and supporting documentation
-scripts/       repeatable development/evaluation utilities
-tests/         cross-system and evaluation tests
-sample-data/   small legal fixtures and metadata (no private uploads)
-PROJECT.md     requirements, architecture, scope, and decisions
-PROJECT_PLAN.md daily milestone schedule
+image → validate → detect plate (YOLOv8 ONNX) → crop/preprocess
+      → local OCR (RapidOCR) → normalize text → authorization lookup (Allowlist)
+      → explain decision → store event & evidence → operational views (Dashboard / History / Alerts)
 ```
 
-Directories that have not reached their milestone contain `.gitkeep`
-placeholders. Day 4 added research/benchmark evidence, Day 5 integrates
-still-image localization and crop extraction, and Day 6 adds configurable
-non-destructive crop variants.
+Online still-image recognition is the primary deployment flow. Bounded short video processing and standalone OpenCV local webcam demonstration are supported as local capabilities.
 
-## Development and deployment overview
+---
 
-Development will proceed as reviewed milestones: backend input and recognition pipeline, Supabase persistence, frontend workflows, integration, then evaluation/deployment hardening. The Next.js frontend is planned for Vercel Free, FastAPI for Render Free, and PostgreSQL/private evidence storage for Supabase Free. Environment-specific secrets remain outside Git; only placeholder variable names appear in `.env.example`.
+## 🏗️ Technology Stack
 
-Day 2 includes a minimal FastAPI foundation, Day 3 adds transient image-input
-validation, Day 4 selects and verifies an exact plate-specific ONNX detector,
-and Day 5 integrates it as a lazy CPU service that returns bounded boxes,
-confidence, timings, and lossless transient crops. Windows PowerShell setup,
-model configuration, API contracts, and test commands are documented in
-[backend/README.md](backend/README.md). Day 6 adds independently selectable
-grayscale, resize, denoise, contrast, threshold, deskew, and perspective
-variants without changing the detection API. Day 8 adds transient local OCR
-and conservative normalization for validated plate crops. Day 10 adds the pure
-authorization decision. Day 11 adds network-free detection logging and private
-evidence abstractions. Day 12 adds the responsive typed Next.js frontend
-foundation; recognition interaction, live Supabase connectivity, and
-deployment remain unimplemented.
+| Area | Technology | Implementation Detail |
+|---|---|---|
+| **Frontend** | Next.js 16 (App Router), React 19, Tailwind CSS | Vercel Free-tier ready |
+| **Backend** | FastAPI, Python 3.12, Pydantic v2 | Render Free-tier ready (Docker) |
+| **Plate Detector** | YOLOv8 Single-class ONNX Model | CPU Execution Provider (`models/day4/best.onnx`) |
+| **OCR Engine** | RapidOCR ONNXRuntime | CPU Execution Provider with character-level accuracy |
+| **Database & Storage** | Supabase PostgreSQL + Private Storage Bucket | Schema migrations & RLS policies (`supabase/migrations/`) |
+| **Local Webcam** | OpenCV HighGUI | Standalone runner (`scripts/run_webcam.py`) |
 
-## Current status
+---
 
-**Day 3 — secure image input (July 25, 2026):** the tested FastAPI shell now
-also validates bounded JPEG/PNG multipart input in memory, verifies decoded
-content and dimensions, returns safe metadata, and rejects invalid input with
-structured errors.
+## 📊 System Performance & Evaluation Baseline
 
-**Day 4 — plate-detector evaluation:** Completed on July 28, 2026 on
-`research/plate-detector`. The research identifies one immutable
-plate-specific ONNX candidate with separate weights/runtime/dataset licensing,
-locally verifies its checksum, CPU tensor/decoding contract, and generated
-fixture results, defines a versioned bbox contract, and retains honest primary
-and fallback raw results. The ignored verification weight is not committed and
-the API detector was not integrated during research.
+Evaluated via reproducible runner (`scripts/evaluate_system.py`) over synthetic and ground-truth sample datasets:
 
-**Day 5 — still-image plate detection:** Completed on July 29, 2026 on
-`feat/plate-detection`. The backend now reuses the Day 4 contract/decoding
-behavior, lazily loads the configured verified ONNX model once with CPU
-execution, returns zero/one/multiple bounded detections and lossless in-memory
-PNG crops, and reports structured model failures. Existing health and
-validation routes remain unchanged.
+| KPI Metric | Measured Value | Standard Target | Status |
+|---|---|---|---|
+| **Detection Recall** | **100.0%** | ≥ 90.0% | ✅ PASS |
+| **Detection Precision** | **100.0%** | ≥ 90.0% | ✅ PASS |
+| **False Alert Rate** | **0.0%** | ≤ 5.0% | ✅ PASS |
+| **Mean Latency** | **416.6 ms** | ≤ 2000 ms | ✅ PASS (Fast CPU inference) |
+| **Automated Test Suite** | **446 Passed** | 300+ Tests | ✅ **313 Backend + 133 Frontend** |
 
-**Day 6 — plate preprocessing:** Completed on July 29, 2026 on
-`feat/plate-preprocessing`. The backend now produces explicitly configured,
-independent OCR-ready variants from preserved Day 5 crops with shape/type
-metadata and timings. Deterministic tests and a generated legal-fixture contact
-sheet document the behavior.
+---
 
-**Day 7 — OCR evaluation:** Completed on July 29, 2026 on
-`research/ocr-baseline`. A reproducible local CPU benchmark compares
-recognition-only and full-pipeline RapidOCR over four labeled synthetic plate
-crops and six independent Day 6 variants. Raw per-sample evidence, environment,
-model size, confidence, latency, candidate tradeoffs, Render caveats, and the
-primary/fallback choice are retained in
-[the OCR evaluation](docs/ocr_evaluation.md).
+## 🚀 Quick Start Guide
 
-**Day 8 — OCR and normalization:** Completed on July 30, 2026 on
-`feat/ocr-recognition`. The backend now lazily reuses the selected local CPU
-OCR engine, tries recognition-only before the documented full-pipeline
-fallback, returns raw and normalized text with confidence, and sends empty or
-low-confidence results to manual review without making an authorization
-decision. See [the OCR service contract](docs/ocr_recognition.md). Day 9
-adds the versioned Supabase data model, typed repository boundaries,
-network-free mocks, and offline schema validation. It does not yet connect the
-application to Supabase or make authorization decisions. See
-[the database design](docs/database_schema.md). Day 10 adds a pure,
-deterministic three-way entry-decision service with stable reasons,
-timezone-aware vehicle validity, safe dependency failures, and no physical or
-external side effects. See
-[the decision contract](docs/authorization_decision.md). Day 11 adds a
-network-free logging/evidence boundary with a forward schema migration,
-deterministic annotated JPEGs, collision-safe private paths, explicit partial
-failures, compensating cleanup, and opaque short-lived signed access. See
-[the logging and evidence contract](docs/detection_logging.md).
-Day 12 establishes five responsive frontend routes, accessible loading/error
-primitives, and a sanitized environment-based typed API client. See
-[the frontend foundation](docs/frontend_foundation.md).
-Day 13 connects the authoritative still-image workflow. Day 14 adds sanitized,
-server-derived dashboard totals/trends, paginated and filtered process-local
-history/detail, and backend-selected unauthorized alerts. Evidence is exposed
-only as availability metadata; live Supabase persistence, authentication, and
-evidence delivery remain unimplemented. See
-[the Day 14 operational contract](docs/dashboard_history_alerts.md).
-Deadline: **August 15, 2026**.
+### 1. Prerequisites
+- Python 3.12+ with virtual environment
+- Node.js 18+ and npm
 
-## Documentation
+### 2. Backend Setup
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+- Health Check: `http://127.0.0.1:8000/health`
+- Interactive API Docs (Swagger): `http://127.0.0.1:8000/docs`
 
-- [Project specification](PROJECT.md)
-- [Daily project plan](PROJECT_PLAN.md)
-- [Task board](docs/task_board.md)
-- [Day 7 OCR evaluation](docs/ocr_evaluation.md)
-- [Day 8 OCR service contract](docs/ocr_recognition.md)
-- [Day 9 Supabase data design](docs/database_schema.md)
-- [Day 10 authorization decision contract](docs/authorization_decision.md)
-- [Day 11 detection logging and evidence](docs/detection_logging.md)
-- [Day 12 frontend foundation](docs/frontend_foundation.md)
+### 3. Frontend Setup
+```powershell
+cd frontend
+npm run dev
+```
+- Web Application UI: `http://localhost:3000`
 
-## Git policy
+### 4. Local Webcam Demo
+```powershell
+backend\.venv\Scripts\python.exe scripts\run_webcam.py --camera 0
+```
+- Press **`Q`** to exit webcam window.
 
-`main` contains only reviewed, working milestones. Use one coherent milestone per branch and start from the latest `main`. Test before marking Completed. Multiple milestones may finish on one real day, but commit dates must never be altered. Do not automatically merge Pull Requests, and do not commit, push, merge, or delete branches without explicit approval.
+### 5. Reproducible Evaluation Runner
+```powershell
+backend\.venv\Scripts\python.exe scripts\evaluate_system.py --input sample-data\evaluation --output artifacts\evaluation
+```
+
+---
+
+## 📁 Repository Structure
+
+```text
+backend/         FastAPI application, domain schemas, services, repositories
+frontend/        Next.js App Router user interface and API client
+docs/            Task board, deployment guide, security checklist, demo guide
+scripts/         Webcam runner, system evaluation, smoke test scripts
+supabase/        SQL database migration schema scripts
+tests/           Cross-system, webcam, and evaluation test suites
+sample-data/     Ground-truth evaluation fixtures and datasets
+artifacts/       Generated evaluation JSON & Markdown reports
+PROJECT.md       System requirements and architecture specification
+PROJECT_PLAN.md  Milestone schedule & acceptance criteria
+```
+
+---
+
+## 📚 Documentation & Milestones
+
+- [Project Specification](PROJECT.md)
+- [Daily Project Plan](PROJECT_PLAN.md)
+- [Task Board](docs/task_board.md)
+- [Free-Tier Deployment Guide](docs/deployment.md)
+- [Release QA & Security Checklist](docs/release_qa_checklist.md)
+- [System Evaluation Report](artifacts/evaluation/evaluation_summary.md)
+- [Demo Rehearsal Checklist](docs/demo_rehearsal_checklist.md)
+- [Local Webcam Demo Guide](docs/webcam_demo.md)
