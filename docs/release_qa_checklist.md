@@ -1,6 +1,7 @@
 # Release QA & Security Audit Checklist — Day 21
 
-This document provides the release readiness checklist, security audit results, and risk mitigations for the CVPX production release.
+This document records localhost prototype release-readiness evidence. It does
+not certify a public or production deployment.
 
 ---
 
@@ -11,26 +12,28 @@ This document provides the release readiness checklist, security audit results, 
 | **Secret Protection** | Accidental commit of API keys or DB passwords | `.gitignore` rules + automated secret scanner test (`test_repository_secret_scanner`) | ✅ **0 Secrets Found** |
 | **Payload Sizing** | Memory exhaustion via giant image uploads | Enforced `MAX_IMAGE_BYTES` (10 MB limit) + HTTP 400/413 error | ✅ **Verified** |
 | **Error Sanitization** | Internal stack traces or file paths leaked to client | Structured sanitized JSON error responses without stack traces | ✅ **Verified** |
-| **CORS Policy** | Unauthorized cross-origin browser requests | Explicit `FRONTEND_ORIGINS` allowlist matching production domains | ✅ **Verified** |
-| **Evidence Access** | Public URL scraping of private plate crops | Private storage buckets + short-lived signed URLs (TTL 300s) | ✅ **Verified** |
+| **CORS Policy** | Unauthorized cross-origin browser requests | Explicit loopback `FRONTEND_ORIGINS` allowlist for the localhost prototype | ✅ **Verified** |
+| **Evidence Access** | Public URL scraping of private plate crops | Process-local storage abstraction; external private buckets remain deferred | ✅ **Verified locally** |
 
 ---
 
 ## 📋 Release QA Verification Checklist
 
 ### 1. Backend Security & Reliability
-- [x] All 313 pytest cases pass cleanly (`python -m pytest`).
+- [x] The final verification run passed 386 backend/repository pytest cases.
 - [x] Health endpoint `/health` returns HTTP 200 with service version.
 - [x] Swagger docs `/docs` accessible without authorization leaks.
-- [x] Ruff lint & format checks pass across 68 backend files.
+- [x] Ruff lint and format checks pass for the current repository scope.
 
 ### 2. Frontend Accessibility & Quality
 - [x] Vitest suite passes 133/133 tests across 10 component files.
 - [x] ESLint passes with 0 warnings/errors.
 - [x] TypeScript `tsc --noEmit` completes cleanly.
-- [x] Next.js production build (`npm run build`) compiles 9 static routes without errors.
+- [x] Next.js production build (`npm run build`) completes without errors.
 
-### 3. Cloud & Free-Tier Operational QA
-- [x] Render Dockerfile & `render.yaml` configuration verified.
-- [x] Supabase SQL migration schema script (`20260802000000_initial_schema.sql`) verified.
-- [x] Deployment guide `docs/deployment.md` verified.
+### 3. Deferred external operations
+- [ ] Docker build/run: not verified because Docker was unavailable earlier.
+- [ ] Render/Vercel/public deployment: deferred and unsupported.
+- [ ] Supabase activation: blocked by unknown live migration ledger and historical schema conflict.
+- [x] Schema validator exits 1 with safe conflict/unknown-ledger findings.
+- [x] Three historical migration files remain byte-for-byte unchanged.

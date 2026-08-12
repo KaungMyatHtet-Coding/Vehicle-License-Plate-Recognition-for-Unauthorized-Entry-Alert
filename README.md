@@ -12,7 +12,9 @@ image → validate → detect plate (YOLOv8 ONNX) → crop/preprocess
       → explain decision → store event & evidence → operational views (Dashboard / History / Alerts)
 ```
 
-Online still-image recognition is the primary deployment flow. Bounded short video processing and standalone OpenCV local webcam demonstration are supported as local capabilities.
+Still-image recognition is the supported localhost workflow. The standalone
+OpenCV webcam is a local demonstration only. Phase 6 short-video processing is
+disabled/experimental and intentionally deferred.
 
 ---
 
@@ -20,11 +22,11 @@ Online still-image recognition is the primary deployment flow. Bounded short vid
 
 | Area | Technology | Implementation Detail |
 |---|---|---|
-| **Frontend** | Next.js 16 (App Router), React 19, Tailwind CSS | Vercel Free-tier ready |
-| **Backend** | FastAPI, Python 3.12, Pydantic v2 | Render Free-tier ready (Docker) |
+| **Frontend** | Next.js 16 (App Router), React 19, Tailwind CSS | Localhost prototype; Vercel deferred |
+| **Backend** | FastAPI, Python 3.12, Pydantic v2 | Localhost prototype; Render deferred |
 | **Plate Detector** | YOLOv8 Single-class ONNX Model | CPU Execution Provider (`models/day4/best.onnx`) |
 | **OCR Engine** | RapidOCR ONNXRuntime | CPU Execution Provider with character-level accuracy |
-| **Database & Storage** | Supabase PostgreSQL + Private Storage Bucket | Schema migrations & RLS policies (`supabase/migrations/`) |
+| **Database & Storage** | Process-local memory repositories/storage | Supabase blocked pending migration/schema evidence |
 | **Local Webcam** | OpenCV HighGUI | Standalone runner (`scripts/run_webcam.py`) |
 
 ---
@@ -54,9 +56,17 @@ backend\.venv\Scripts\python.exe scripts\evaluate_system.py --input sample-data\
 - Python 3.12+ with virtual environment
 - Node.js 18+ and npm
 
+The ignored local detector prerequisite is `models/day4/best.onnx` with size
+`12,265,233` bytes and SHA-256
+`a599289e5c25ab693fd7c6a152093f95fc34aef9b59b2c798127173e6e7ba2d9`.
+It is not tracked or redistributed; license and attribution verification
+remain unresolved.
+
 ### 2. Backend Setup
 ```powershell
 cd backend
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 - Health Check: `http://127.0.0.1:8000/health`
@@ -65,6 +75,7 @@ cd backend
 ### 3. Frontend Setup
 ```powershell
 cd frontend
+npm.cmd install
 npm run dev
 ```
 - Web Application UI: `http://localhost:3000`
@@ -79,6 +90,13 @@ backend\.venv\Scripts\python.exe scripts\run_webcam.py --camera 0
 ```powershell
 backend\.venv\Scripts\python.exe scripts\evaluate_system.py --input sample-data\evaluation --output artifacts\evaluation
 ```
+This report is development-fixture smoke evidence only, not a benchmark or a
+real-world, Myanmar-specific, or production accuracy claim. The schema
+validator is expected to exit 1 while the historical migration conflict and
+unknown live ledger remain unresolved.
+
+Docker commands are local reproducibility steps, not executed evidence; Docker
+was unavailable in the earlier verification environment.
 
 ---
 
@@ -106,6 +124,6 @@ PROJECT_PLAN.md  Milestone schedule & acceptance criteria
 - [Task Board](docs/task_board.md)
 - [Free-Tier Deployment Guide](docs/deployment.md)
 - [Release QA & Security Checklist](docs/release_qa_checklist.md)
-- [System Evaluation Report](artifacts/evaluation/evaluation_summary.md)
 - [Demo Rehearsal Checklist](docs/demo_rehearsal_checklist.md)
 - [Local Webcam Demo Guide](docs/webcam_demo.md)
+- [Final Verification Boundary](docs/final_verification.md)

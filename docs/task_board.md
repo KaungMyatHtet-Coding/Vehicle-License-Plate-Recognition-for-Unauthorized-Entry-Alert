@@ -6,6 +6,11 @@
 **Milestone owner:** Project developer (one active developer)  
 **Board rule:** Status reflects evidence, not intention.
 
+The historical milestone rows below retain their original dates and scope.
+Current reduced-P0 delivery is localhost-only; public deployment, Supabase
+activation, and Phase 6 short-video processing remain deferred or blocked as
+described in the final verification boundary.
+
 ## Evidence required for Completed
 
 A task may move to Completed only when its scoped files exist, applicable verification commands have passed with recorded results, acceptance criteria are demonstrated, documentation reflects reality, and a diff/secret/generated-file review finds no unintended content. User-facing work also needs a recorded smoke test or screenshot; research needs sources, license/version details, fixture/method, and real raw results. A commit or PR is useful milestone evidence but is not required for Day 1 and must never be created without explicit approval.
@@ -50,7 +55,7 @@ None.
 | Aug 12 | Online QA/security | Project developer | Online security & hardening tests `backend/tests/test_online_hardening.py`, secret scanner, payload size limit enforcement, error response sanitization, release QA checklist (`docs/release_qa_checklist.md`); 5 focused/313 full backend tests, Ruff lint/format, Vitest (133/133), ESLint, TypeScript, and Next.js production build pass cleanly |
 | Aug 13 | UI/accessibility polish | Project developer | Accessible focus-visible ring styles, ARIA labels, EmptyState feedback components across all 5 routes, mobile responsive layout checks; 313 backend pytest, Vitest (133/133), ESLint, TypeScript, and Next.js production build pass cleanly |
 | Aug 14 | Deliverables/rehearsal | Project developer | Reconciled `README.md` with system architecture & performance baseline metrics, demo rehearsal guide (`docs/demo_rehearsal_checklist.md`), offline fallback procedures; 313 backend pytest, Vitest (133/133), ESLint, TypeScript, and Next.js production build pass cleanly |
-| Aug 15 | Final verification/submission | Project developer | Full Day 1–24 audit: 313 backend pytest (all test suites), 133 frontend Vitest, Ruff lint/format (68 files), ESLint, TypeScript, Next.js production build (9/9 routes) — all 446 automated tests passed with zero failures, zero lint errors, zero type errors; `main` at commit `23e2ab3` verified clean and submission-ready |
+| Aug 15 | Final verification/submission | Project developer | Final reduced-P0 documentation and release-readiness verification is recorded on `docs/p0-final-verification`; current evidence must be read from the commands and results in that report, not from historical test totals or public-deployment claims |
 
 ## Blocked
 

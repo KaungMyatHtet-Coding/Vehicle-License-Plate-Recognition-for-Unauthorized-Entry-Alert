@@ -1,4 +1,9 @@
-# Day 17 bounded short video processing
+# Day 17 bounded short video processing — deferred
+
+Phase 6 video processing is intentionally disabled/experimental and deferred
+from the final reduced-P0 localhost submission. This document describes the
+historical design only; it is not a claim that video is an enabled production
+capability.
 
 Day 17 implements bounded short-video license plate recognition by reusing the authoritative still-image recognition pipeline (`RecognitionOrchestrationService`) across sampled video frames without modifying still-image behavior or contracts.
 

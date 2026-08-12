@@ -14,7 +14,7 @@ ENABLE_EXPERIMENTAL_VIDEO=false
 and configured frontend origins must be loopback values. This rule does not
 claim to override an arbitrary host supplied directly to the Uvicorn CLI.
 
-Phase 1 focused verification contains 11 test functions and 12 collected test
+Historical Phase 1 focused verification contained 11 test functions and 12 collected test
 cases: the localhost configuration file has 7 functions, including 1
 two-case parameterized function, and the video file has 4 functions. The
 repository-wide Ruff format check has one known pre-existing finding:

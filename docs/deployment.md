@@ -20,8 +20,8 @@ host loopback interface, for example:
 127.0.0.1:8000:8000
 ```
 
-The later local-only Docker commands are documented here but are not executed
-in Phase 3:
+The later local-only Docker commands are documented here but were not executed
+in the earlier environment because Docker was unavailable:
 
 ```powershell
 docker build --file backend/Dockerfile --tag cvpx-local:phase3 .
