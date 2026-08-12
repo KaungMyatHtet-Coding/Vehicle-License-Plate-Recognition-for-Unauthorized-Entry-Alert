@@ -12,8 +12,9 @@ or distinct multi-plate results. Analysis is non-persisting; finalized still
 image results persist exactly once. The local webcam CLI adds bounded spatial
 tracking, exact temporal consensus, real clipped boxes, cooldown suppression,
 and retry after unsuccessful persistence. It is a local demonstration, not
-production surveillance. Phase 6 short-video processing remains disabled/
-experimental and deferred.
+production surveillance. Phase 6 short-video processing is now implemented as
+an experimental, localhost-only, disabled-by-default bounded upload workflow;
+it is not live streaming or production surveillance.
 
 The ignored model prerequisite is `models/day4/best.onnx`, exactly
 12,265,233 bytes with SHA-256
