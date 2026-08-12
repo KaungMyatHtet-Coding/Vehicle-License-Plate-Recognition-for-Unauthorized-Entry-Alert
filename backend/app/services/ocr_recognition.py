@@ -24,6 +24,25 @@ ALLOWED_PLATE_CHARACTERS = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 OcrMode = Literal["recognition_only", "full_pipeline"]
 
 
+def is_plate_grammar_reliable(
+    normalized_text: str,
+    supported_regions: list[str],
+    minimum_length: int,
+    maximum_length: int,
+) -> bool:
+    """Accept only conservative, configurable region-plus-number structures."""
+
+    if not isinstance(normalized_text, str):
+        return False
+    if not minimum_length <= len(normalized_text) <= maximum_length:
+        return False
+    if not any(normalized_text.startswith(region) for region in supported_regions):
+        return False
+    return bool(
+        normalized_text.isalnum() and any(char.isdigit() for char in normalized_text)
+    )
+
+
 class PlateOcrError(RuntimeError):
     """Safe OCR configuration/runtime failure with a stable code."""
 

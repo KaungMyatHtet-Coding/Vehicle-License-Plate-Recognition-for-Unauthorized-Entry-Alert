@@ -89,6 +89,13 @@ No upload or crop is persisted. Optional debug observation exists only as an
 injected service sink; the application configures none and writes no debug
 files.
 
+Phase 4 recognition ranking is bounded and conservative. The defaults evaluate
+at most three candidates, support configurable YGN/MDY/NPT prefixes, require a
+numeric component and normalized length from 7 through 12, and use a 0.08
+ambiguity margin. Unsupported prefixes, alphabetic watermark text such as
+`ALAMY`, low-confidence OCR, and close competing candidates produce manual
+review. These are workflow safeguards, not accuracy claims.
+
 Missing configuration/model files, failed artifact validation, unloadable
 models, contract mismatches, and inference failures return HTTP 503 with a
 stable structured code, safe message, and correlation ID. Invalid input keeps

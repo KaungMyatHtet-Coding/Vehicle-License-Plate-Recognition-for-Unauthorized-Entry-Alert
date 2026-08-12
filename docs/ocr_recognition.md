@@ -66,6 +66,13 @@ substitutes similar-looking characters such as letter `O` and digit `0`.
   `manual_review` / `OCR_LOW_CONFIDENCE`.
 - A result meeting the threshold returns `recognized`.
 
+When used by the still-image orchestration, recognition also applies the
+configured conservative plate grammar (`YGN`, `MDY`, and `NPT` by default),
+bounded normalized length, and a required numeric component. Unsupported
+plausible prefixes and alphabetic watermark text such as `ALAMY` remain manual
+review. Separators are normalized before this check; no fuzzy character
+substitution is performed.
+
 These statuses describe OCR reliability only. They are not `AUTHORIZED` or
 `UNAUTHORIZED`; those decisions belong to later milestones.
 
@@ -74,6 +81,11 @@ These statuses describe OCR reliability only. They are not `AUTHORIZED` or
 ```text
 OCR_MIN_CONFIDENCE=0.80
 OCR_FULL_PIPELINE_FALLBACK=true
+MAX_RECOGNITION_CANDIDATES=3
+SUPPORTED_PLATE_REGIONS=YGN,MDY,NPT
+MIN_PLATE_LENGTH=7
+MAX_PLATE_LENGTH=12
+CANDIDATE_AMBIGUITY_MARGIN=0.08
 ```
 
 The 0.80 default is a configurable conservative development value, not a

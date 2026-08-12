@@ -283,13 +283,15 @@ def test_e2e_fail_closed_unauthorized_and_alerts() -> None:
     v_service = VehicleManagementService(deps.vehicles, clock=lambda: NOW)
     v_service.create(
         VehicleCreate(
-            plate_number="BLK-9999", status="BLOCKED", description="Blocked intruder"
+            plate_number="YGN-9999",
+            status="BLOCKED",
+            description="Blocked intruder",
         )
     )
 
     # 2. Setup orchestration service
     detector = MockDetector(with_plate=True)
-    ocr = MockOcr(normalized_text="BLK9999", confidence=0.92)
+    ocr = MockOcr(normalized_text="YGN9999", confidence=0.92)
     decision_svc = AuthorizationDecisionService(
         deps.vehicles, settings, clock=lambda: NOW
     )
@@ -338,11 +340,11 @@ def test_e2e_fail_closed_inactive_expired_not_yet_valid_and_unknown() -> None:
     v_service = VehicleManagementService(deps.vehicles, clock=lambda: NOW)
 
     # Create INACTIVE
-    v_service.create(VehicleCreate(plate_number="INA-0001", status="INACTIVE"))
+    v_service.create(VehicleCreate(plate_number="YGN-0001", status="INACTIVE"))
     # Create EXPIRED
     v_service.create(
         VehicleCreate(
-            plate_number="EXP-0002",
+            plate_number="MDY-0002",
             valid_from=NOW - timedelta(days=10),
             valid_until=NOW - timedelta(days=1),
         )
@@ -350,7 +352,7 @@ def test_e2e_fail_closed_inactive_expired_not_yet_valid_and_unknown() -> None:
     # Create NOT_YET_VALID
     v_service.create(
         VehicleCreate(
-            plate_number="FUTURE-03",
+            plate_number="NPT-0003",
             valid_from=NOW + timedelta(days=1),
             valid_until=NOW + timedelta(days=10),
         )
@@ -367,10 +369,10 @@ def test_e2e_fail_closed_inactive_expired_not_yet_valid_and_unknown() -> None:
     )
 
     test_cases = [
-        ("INA0001", "UNAUTHORIZED", "VEHICLE_INACTIVE"),
-        ("EXP0002", "UNAUTHORIZED", "VEHICLE_EXPIRED"),
-        ("FUTURE03", "UNAUTHORIZED", "VEHICLE_NOT_YET_VALID"),
-        ("UNKNOWN99", "UNAUTHORIZED", "VEHICLE_NOT_FOUND"),
+        ("YGN0001", "UNAUTHORIZED", "VEHICLE_INACTIVE"),
+        ("MDY0002", "UNAUTHORIZED", "VEHICLE_EXPIRED"),
+        ("NPT0003", "UNAUTHORIZED", "VEHICLE_NOT_YET_VALID"),
+        ("YGN9998", "UNAUTHORIZED", "VEHICLE_NOT_FOUND"),
     ]
 
     for plate_text, expected_dec, expected_reason in test_cases:
@@ -526,7 +528,7 @@ def test_e2e_database_lookup_failure_fails_to_manual_review() -> None:
 
     orch_svc = RecognitionOrchestrationService(
         detector=MockDetector(with_plate=True),  # type: ignore[arg-type]
-        ocr=MockOcr(normalized_text="FAILDB", confidence=0.95),  # type: ignore[arg-type]
+        ocr=MockOcr(normalized_text="YGN9997", confidence=0.95),  # type: ignore[arg-type]
         decision=AuthorizationDecisionService(
             failing_repo,
             settings,
@@ -563,13 +565,13 @@ def test_e2e_evidence_storage_failure_partial_failure() -> None:
 
     settings = get_settings()
     v_service = VehicleManagementService(deps.vehicles, clock=lambda: NOW)
-    v_service.create(VehicleCreate(plate_number="STORE-ERR"))
+    v_service.create(VehicleCreate(plate_number="YGN9996"))
 
     failing_storage = FailingEvidenceStorage()
 
     orch_svc = RecognitionOrchestrationService(
         detector=MockDetector(with_plate=True),  # type: ignore[arg-type]
-        ocr=MockOcr(normalized_text="STOREERR", confidence=0.95),  # type: ignore[arg-type]
+        ocr=MockOcr(normalized_text="YGN9996", confidence=0.95),  # type: ignore[arg-type]
         decision=AuthorizationDecisionService(
             deps.vehicles, settings, clock=lambda: NOW
         ),

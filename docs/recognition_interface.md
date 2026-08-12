@@ -16,17 +16,23 @@ transient in the request.
 
 The backend then:
 
-1. detects plate candidates and selects the existing confidence-sorted first
-   candidate as the primary plate;
-2. returns `no_plate_detected` without inventing OCR or authorization data
+1. detects a bounded number of plate candidates and ranks them deterministically
+   using detector confidence, OCR confidence, conservative plate grammar, crop
+   geometry, and OCR mode;
+2. selects a clearly stronger reliable candidate, or marks close competing
+   candidates for `MANUAL_REVIEW` rather than choosing arbitrarily. Two or
+   more distinct reliable normalized plates always remain `MANUAL_REVIEW`,
+   regardless of score difference; duplicate detections of one normalized
+   plate may be ranked deterministically;
+3. returns `no_plate_detected` without inventing OCR or authorization data
    when no candidate exists;
-3. passes the lossless primary crop to the Day 8 OCR service, which already
+4. passes the lossless selected crop to the Day 8 OCR service, which already
    uses the Day 6 non-destructive preprocessing boundary and conservative
    normalization;
-4. passes the OCR result to the Day 10 decision service;
-5. passes the unchanged decision, original image, primary bounding box, OCR,
+5. passes the OCR result to the Day 10 decision service;
+6. passes the unchanged decision, original image, selected bounding box, OCR,
    and timings to Day 11 logging/evidence;
-6. returns the selected crop, OCR values, frozen authoritative decision,
+7. returns the selected crop, OCR values, frozen authoritative decision,
    logging/evidence status, correlation ID, and safe timings.
 
 Expected pipeline failures use the established structured error envelope.
@@ -56,6 +62,21 @@ A live Supabase adapter remains deferred by the existing Day 11 contract.
 Until authorized-vehicle integration is added, the default empty process-local
 vehicle repository cannot produce an authorized match; deterministic dependency
 fakes cover authorized behavior without bypassing production rules.
+
+Analysis and persistence are separate internal operations. The still-image
+endpoint analyzes, selects, decides, and then persists exactly once. An
+internal non-persisting analysis operation is available for a future webcam
+boundary; webcam consensus is not implemented in this phase. Only selected
+workflow data is logged, and alternative OCR text is never returned or logged.
+
+Candidate and grammar defaults are bounded and configurable through
+`MAX_RECOGNITION_CANDIDATES`, `SUPPORTED_PLATE_REGIONS`, `MIN_PLATE_LENGTH`,
+`MAX_PLATE_LENGTH`, and `CANDIDATE_AMBIGUITY_MARGIN`. The conservative initial
+regions are YGN, MDY, and NPT. Normalization removes documented separators but
+never substitutes similar characters. Alphabetic watermark text such as
+`ALAMY`, unsupported prefixes, missing numeric components, low-confidence OCR,
+and ambiguous candidates remain manual review. These are conservative workflow
+safeguards, not real-world accuracy measurements.
 
 Automated tests cover all result and failure states without model weights,
 external services, hardware, or live OCR. Six desktop browser screenshots are
