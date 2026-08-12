@@ -77,8 +77,9 @@ Plates Dataset**, Augmented Startups, Roboflow, 2022, CC BY 4.0, source
 <https://universe.roboflow.com/augmented-startups/vehicle-registration-plates-trudk/dataset/1>.
 The original dataset and weights are not redistributed by this repository.
 The ignored local verification artifact matched the published SHA-256. Any
-Day 5 download must repeat that verification and any distribution must carry
-the applicable notices and attribution.
+future local acquisition must repeat that verification; this repository does
+not redistribute the model. License and attribution compliance remains an
+explicit unresolved review item.
 
 ## Evidence classification
 

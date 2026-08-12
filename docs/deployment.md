@@ -1,100 +1,59 @@
-# Free-Tier Deployment Guide — Day 19
+# Local deployment boundary
 
-This guide provides step-by-step instructions for deploying the CVPX system to free-tier cloud platforms without exposing credentials.
+Phase 3 supports a reproducible localhost prototype only. Render, Vercel, and
+live Supabase deployment are deferred and unsupported for the current
+submission. No public deployment success is claimed.
 
----
+## Backend
 
-## 🏗️ Architecture
+The backend runs on loopback by default:
 
-| Component | Platform | Free Tier Spec |
-|---|---|---|
-| **Backend API** | [Render](https://render.com) | Docker Web Service (512 MB RAM, 0.1 CPU) |
-| **Frontend UI** | [Vercel](https://vercel.com) | Next.js App Router (Global Edge CDN) |
-| **Database & Storage** | [Supabase](https://supabase.com) | PostgreSQL 500MB + 1GB Storage |
-
----
-
-## 1. Supabase Setup (Database & Storage)
-
-### Step 1: Create Project
-1. Log in to [Supabase Console](https://supabase.com/dashboard).
-2. Create a new project named `cvpx-production`.
-3. Save your Database Password securely.
-
-### Step 2: Run SQL Migration
-1. Go to **SQL Editor** in Supabase Console.
-2. Open `supabase/migrations/20260802000000_initial_schema.sql`.
-3. Copy the script content and click **Run**.
-4. Verify that tables `authorized_vehicles`, `detection_logs`, and `recognition_activity` are created.
-
-### Step 3: Create Private Evidence Storage Bucket
-1. Go to **Storage** → **New Bucket**.
-2. Name: `detection-evidence`.
-3. Set Public: **OFF (Private)**.
-4. Restrict file uploads to `image/jpeg`.
-
----
-
-## 2. Render Setup (Backend API)
-
-### Step 1: Deploy Web Service
-1. Log in to [Render Dashboard](https://dashboard.render.com).
-2. Click **New +** → **Web Service**.
-3. Connect your GitHub repository `Vehicle-License-Plate-Recognition-for-Unauthorized-Entry-Alert`.
-4. Render will auto-detect `render.yaml` or set manually:
-   - **Runtime:** `Docker`
-   - **Dockerfile Path:** `backend/Dockerfile`
-   - **Instance Type:** `Free`
-
-### Step 2: Environment Variables
-Add the following in Render **Environment** tab:
-
-```ini
-APP_ENV=production
-LOG_LEVEL=INFO
-FRONTEND_ORIGINS=https://cvpx-frontend.vercel.app,http://localhost:3000
-DETECTOR_MODEL_PATH=models/day4/best.onnx
-DETECTOR_CONFIDENCE_THRESHOLD=0.15
-OCR_MIN_CONFIDENCE=0.80
-DECISION_MIN_CONFIDENCE=0.80
+```powershell
+backend\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
 ```
 
-### Step 3: Verify Health Endpoint
-Once deployed, verify:
-```bash
-curl https://cvpx-backend.onrender.com/health
-```
-Expected response: `{"status":"ok","service":"vehicle-license-backend","version":"0.1.0"}`
+The canonical health check is `http://127.0.0.1:8000/health`. The Docker
+container listens on its internal configurable `PORT`; publish it only to the
+host loopback interface, for example:
 
-> **Note on Cold-Starts:** Render Free Tier spins down after 15 minutes of inactivity. First request takes ~45-50s to start up. The frontend UI displays a cold-start status banner during wake-up.
-
----
-
-## 3. Vercel Setup (Frontend UI)
-
-### Step 1: Import Project
-1. Log in to [Vercel Dashboard](https://vercel.com/dashboard).
-2. Click **Add New...** → **Project**.
-3. Import your GitHub repository.
-4. Set **Root Directory** to `frontend`.
-
-### Step 2: Environment Variable
-Add the following in Vercel **Environment Variables**:
-
-```ini
-NEXT_PUBLIC_API_URL=https://cvpx-backend.onrender.com
+```text
+127.0.0.1:8000:8000
 ```
 
-### Step 3: Deploy
-Click **Deploy**. Vercel will build the Next.js application and deploy to Edge CDN.
+The later local-only Docker commands are documented here but are not executed
+in Phase 3:
 
----
+```powershell
+docker build --file backend/Dockerfile --tag cvpx-local:phase3 .
+docker run --rm --publish 127.0.0.1:8000:8000 cvpx-local:phase3
+```
 
-## 4. Verification Checklist
+The health endpoint remains independent of model loading and database access.
+The application remains in memory repository mode by default, and the Phase 2
+Supabase schema-readiness and migration-ledger blocker remains in force.
 
-- [ ] Health endpoint returns HTTP 200: `curl https://<backend-url>/health`
-- [ ] Swagger API docs available: `https://<backend-url>/docs`
-- [ ] Frontend loads cleanly without CORS errors
-- [ ] Image upload via `/recognition` returns authorization decision
-- [ ] Authorized vehicle management via `/authorized-vehicles` works
-- [ ] No secrets, API keys, or private database URIs committed to repository
+## Detector prerequisite
+
+The ignored local prerequisite `models/day4/best.onnx` is not included in Git
+or redistributed here. A local Docker build requires the file and fails if its
+size is not `12,265,233` bytes or its SHA-256 is not
+`a599289e5c25ab693fd7c6a152093f95fc34aef9b59b2c798127173e6e7ba2d9`. Model
+license and attribution verification remains unresolved.
+
+The current local verification environment reports `opencv-python==5.0.0.93`,
+while the clean-container manifest declares
+`opencv-python-headless==4.12.0.88`. Clean-container compatibility remains
+unverified; no dependency pin is changed for this limitation.
+
+## Deferred public platforms
+
+`render.yaml` is retained only as a clearly marked future reference and does
+not configure an active service. Render/Vercel hostnames, credentials, CORS
+origins, migrations, storage policies, and public health checks must not be
+treated as verified. Do not add secrets or claim a public deployment without a
+separate authorized phase and evidence.
+
+The browser-visible frontend setting is consistently named
+`NEXT_PUBLIC_API_BASE_URL`. It must contain only an explicitly configured
+public HTTP(S) backend URL in a future deployment; localhost remains the only
+supported setting for this submission.
