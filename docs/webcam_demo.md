@@ -1,108 +1,49 @@
-# Webcam Demo — Day 18
+# Local Webcam Demo
 
-## Overview
-
-`scripts/run_webcam.py` is a **standalone local CLI script** that runs OpenCV-based license plate recognition on a physical camera attached to your machine.
-
-> **IMPORTANT:** The backend API server (`uvicorn`) does NOT require a camera to start. This script is entirely isolated from the server process.
-
----
+`python scripts/run_webcam.py` is a standalone, localhost-only CLI for a
+physical camera. It constructs the existing Phase 4 services directly and
+does not send every frame through the public persistence-producing endpoint.
+The backend server remains camera- and GUI-free.
 
 ## Usage
 
 ```powershell
-# Show all options
 python scripts\run_webcam.py --help
-
-# Run with default camera (index 0)
-python scripts\run_webcam.py
-
-# Run with a specific camera index
-python scripts\run_webcam.py --camera 1
-
-# Test camera-unavailable error handling (safe)
+python scripts\run_webcam.py --camera 0 --fps 2 --cooldown 3
 python scripts\run_webcam.py --camera -1
-
-# Custom FPS and cooldown
-python scripts\run_webcam.py --camera 0 --fps 3 --cooldown 2.0
 ```
 
-## Options
+The CLI captures sampled frames, encodes bounded JPEG bytes, performs
+non-persisting analysis, associates selected boxes by spatial IoU, and requires
+two exact observations before persistence. `--consensus-window`,
+`--agreement-count`, `--track-expiry`, `--max-tracks`, and `--iou-threshold`
+are bounded local controls. No target FPS or recognition accuracy is promised.
 
-| Option | Default | Description |
-|---|---|---|
-| `--camera INDEX` | `0` | OpenCV camera index |
-| `--fps FPS` | `2.0` | Recognition frames per second |
-| `--cooldown SECONDS` | `3.0` | Duplicate suppression window |
+## Safety behavior
 
----
+- Tracks have a fixed maximum count, short expiry, and bounded observation
+  window. They are never keyed only by OCR text.
+- OCR must repeat the exact normalized text. Prefix/character disagreements,
+  distinct reliable plates in one track, and unresolved candidates remain
+  `MANUAL_REVIEW` and create no log or evidence.
+- A stable normalized plate is checked against the backend decision service,
+  then its own analyzed frame and correlation ID are persisted at most once
+  during the cooldown. Suppression occurs before logging/evidence; cooldown is
+  recorded only after `logging.log_persisted` succeeds, so failed events remain
+  retryable. Cooldown state is bounded and expires.
+- The overlay draws only the selected detector box after clipping it to the
+  original frame. Invalid or zero-area boxes are skipped. It shows only safe
+  workflow status and selected text, never evidence paths or provider details.
+- Camera-open, frame-read, encoding, analysis, `Q`, Escape, and Ctrl+C paths
+  release the camera and destroy OpenCV windows safely.
 
-## On-Screen Overlays
+The direct in-process CLI uses the local memory repository by default. It is a
+local demonstration and does not change still-image endpoint persistence
+semantics. It does not implement webcam consensus in the backend server or
+provide a public no-logging API flag.
 
-| Element | Position | Content |
-|---|---|---|
-| **FPS / Latency** | Top-left | Live capture FPS and inference latency in ms |
-| **Plate + Decision** | Bottom bar | Detected plate text and AUTHORIZED/UNAUTHORIZED decision |
-| **Duplicate label** | Bottom bar | `(dup)` suffix + `[suppressed]` when cooldown active |
+## Controls and limitations
 
----
-
-## Controls
-
-| Key | Action |
-|---|---|
-| `Q` or `Escape` | Stop the demo cleanly |
-| `Ctrl+C` (terminal) | Graceful shutdown |
-
----
-
-## Camera-Unavailable Handling
-
-When no camera is attached or the requested index is invalid:
-
-```
-[WebcamDemo] Camera unavailable: Camera index 9999 is unavailable or not connected.
-[WebcamDemo] NOTE: The backend API server does not require a camera to start.
-```
-
-The script exits with code **1** (error) without crashing or hanging.
-
----
-
-## Architecture
-
-```
-scripts/run_webcam.py           ← Standalone CLI entry point
-  └── WebcamRunner              ← Camera loop, overlay drawing, cooldown
-        └── RecognitionOrchestrationService  ← Shared Day 16 pipeline
-              ├── PlateDetectionService       ← YOLO/CV detector
-              ├── PlateOcrService             ← OCR model
-              ├── AuthorizationDecisionService
-              └── DetectionLoggingService
-```
-
-The `run_webcam.py` script adds the `backend/` directory to `sys.path` at runtime; no changes to server imports are required.
-
----
-
-## Running Tests
-
-```powershell
-# Day 18 focused tests only
-python -m pytest tests -k webcam -v
-
-# Full suite (Day 1–18 regression)
-python -m pytest
-```
-
-### What the Tests Verify
-
-| Test | Description |
-|---|---|
-| `test_parse_args_defaults` | Default CLI argument values |
-| `test_parse_args_custom_values` | Custom `--camera`, `--fps`, `--cooldown` |
-| `test_open_camera_unavailable_raises` | `CameraUnavailableError` for invalid index |
-| `test_run_returns_1_when_camera_unavailable` | Exit code 1, no crash |
-| `test_duplicate_suppression_logic` | Cooldown window logic |
-| `test_webcam_script_importable_and_help` | Script importable without side effects |
-| `test_server_startup_does_not_import_webcam` | `main.py` is camera-free |
+`Q` or Escape stops the window; Ctrl+C stops the terminal process. A missing
+camera exits safely with code 1. Tests are camera-free and use deterministic
+fake frames/services; they do not establish real-world accuracy.

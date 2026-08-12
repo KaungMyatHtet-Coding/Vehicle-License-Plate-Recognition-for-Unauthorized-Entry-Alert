@@ -87,6 +87,20 @@ class RecognitionOrchestrationService:
         """Analyze, decide, then persist exactly once for a still image."""
 
         analysis = self.analyze(image_bytes, correlation_id)
+        return self._persist_analysis(
+            image_bytes, analysis, correlation_id, validate_identity=False
+        )
+
+    def _persist_analysis(
+        self,
+        image_bytes: bytes,
+        analysis: RecognitionAnalysis,
+        correlation_id: str,
+        *,
+        validate_identity: bool = True,
+    ) -> RecognitionResponse:
+        """Persist one service-produced finalized analysis (private webcam boundary)."""
+
         if analysis.selected is None:
             if self._activity is not None:
                 try:
@@ -118,6 +132,17 @@ class RecognitionOrchestrationService:
         ocr = analysis.ocr
         decision = analysis.decision
         assert selected is not None and ocr is not None and decision is not None
+        if validate_identity and (
+            getattr(ocr, "correlation_id", None) != correlation_id
+            or getattr(decision, "correlation_id", None) != correlation_id
+            or getattr(decision, "normalized_plate", None)
+            != getattr(ocr, "normalized_text", None)
+            or not getattr(ocr, "normalized_text", None)
+        ):
+            raise RecognitionOrchestrationError(
+                "ANALYSIS_INVALID",
+                "The finalized recognition analysis could not be persisted.",
+            )
         logging = self._logging.persist(
             image_bytes=image_bytes,
             bbox=(

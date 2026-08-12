@@ -64,9 +64,13 @@ vehicle repository cannot produce an authorized match; deterministic dependency
 fakes cover authorized behavior without bypassing production rules.
 
 Analysis and persistence are separate internal operations. The still-image
-endpoint analyzes, selects, decides, and then persists exactly once. An
-internal non-persisting analysis operation is available for a future webcam
-boundary; webcam consensus is not implemented in this phase. Only selected
+endpoint analyzes, selects, decides, and then persists exactly once. The local
+webcam CLI uses the internal non-persisting analysis operation, applies bounded
+spatial temporal consensus, and calls the private finalized-analysis boundary
+with the selected observation's own frame bytes and correlation ID only for one
+stable, unsuppressed event. Cooldown is committed only after `log_persisted` is
+true; failed persistence remains retryable. Webcam consensus is local CLI
+behavior and is not a public API or a backend startup dependency. Only selected
 workflow data is logged, and alternative OCR text is never returned or logged.
 
 Candidate and grammar defaults are bounded and configurable through
