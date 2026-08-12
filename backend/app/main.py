@@ -79,4 +79,5 @@ app.include_router(health_router)
 app.include_router(recognition_router, prefix="/api")
 app.include_router(operations_router, prefix="/api")
 app.include_router(vehicles_router, prefix="/api")
-app.include_router(video_router, prefix="/api/recognition")
+if settings.enable_experimental_video:
+    app.include_router(video_router, prefix="/api/recognition")

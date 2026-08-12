@@ -1,5 +1,31 @@
 # Vehicle License Plate Recognition for Unauthorized Entry Alert
 
+The supported delivery mode is a localhost-only university prototype. The
+backend defaults to loopback binding, loopback frontend origins, coherent
+process-local memory repositories, and disabled experimental video:
+
+```text
+APP_MODE=localhost
+REPOSITORY_MODE=memory
+ENABLE_EXPERIMENTAL_VIDEO=false
+```
+
+`APP_MODE=localhost` validates the supported application settings: `APP_HOST`
+and configured frontend origins must be loopback values. This rule does not
+claim to override an arbitrary host supplied directly to the Uvicorn CLI.
+
+Phase 1 focused verification contains 11 test functions and 12 collected test
+cases: the localhost configuration file has 7 functions, including 1
+two-case parameterized function, and the video file has 4 functions. The
+repository-wide Ruff format check has one known pre-existing finding:
+`backend/app/repositories/supabase_repo.py` would be reformatted. That file is
+intentionally unchanged.
+
+Choosing `REPOSITORY_MODE=supabase` is explicit, requires complete server-side
+configuration, and never silently falls back to memory. Default unit tests
+override ignored dotenv configuration before importing the application and
+reject external network connections; no live service is required.
+
 ## Backend foundation
 
 This directory contains the tested validation, detection, preprocessing, OCR,
