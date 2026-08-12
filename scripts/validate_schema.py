@@ -1,4 +1,4 @@
-"""Offline structural validation for the versioned Day 9 PostgreSQL migration."""
+"""Offline structural validation for the retained PostgreSQL migrations."""
 
 from __future__ import annotations
 
@@ -19,12 +19,19 @@ MIGRATION = (
     / "migrations"
     / "202607310001_day9_data_model.sql"
 )
+PRODUCTION_MIGRATION = (
+    Path(__file__).resolve().parents[1]
+    / "supabase"
+    / "migrations"
+    / "20260802000000_initial_schema.sql"
+)
 OUTCOME_MIGRATION = (
     Path(__file__).resolve().parents[1]
     / "supabase"
     / "migrations"
     / "202608020001_day11_detection_outcomes.sql"
 )
+HISTORICAL_MIGRATIONS = (MIGRATION, PRODUCTION_MIGRATION, OUTCOME_MIGRATION)
 
 REQUIRED_PATTERNS = {
     "transaction": r"\Abegin;.*commit;\s*\Z",
@@ -196,16 +203,42 @@ def validate_migration_order(paths: tuple[Path, ...]) -> list[str]:
     """Require deterministic increasing migration names with Day 9 before Day 11."""
 
     names = [path.name for path in paths]
-    if names != sorted(names) or names != [MIGRATION.name, OUTCOME_MIGRATION.name]:
+    expected = [MIGRATION.name, OUTCOME_MIGRATION.name]
+    if names == expected:
+        return []
+    if names != sorted(names) or names != [path.name for path in HISTORICAL_MIGRATIONS]:
         return ["invalid migration ordering"]
     return []
+
+
+def validate_historical_migrations(paths: tuple[Path, ...]) -> list[str]:
+    """Report incompatible historical assumptions without claiming live safety."""
+
+    names = tuple(path.name for path in paths)
+    if names != tuple(path.name for path in HISTORICAL_MIGRATIONS):
+        return ["historical migration set is incomplete or unexpected"]
+    day9 = paths[0].read_text(encoding="utf-8")
+    day19 = paths[1].read_text(encoding="utf-8")
+    day11 = paths[2].read_text(encoding="utf-8")
+    failures: list[str] = [
+        "migration ledger status unknown: live Supabase history was not inspected",
+    ]
+    if "normalized_plate" in day9 and "plate_number" in day19:
+        failures.append(
+            "historical schema conflict: Day 9/11 canonical columns conflict with the Day 19 schema"
+        )
+    if "ocr_status" in day9 and "decision" in day11 and "normalized_plate" in day19:
+        failures.append(
+            "historical schema conflict: Day 19 cannot safely be applied as the canonical chain"
+        )
+    return failures
 
 
 def main() -> int:
     """Validate the retained migration and print a safe local result."""
 
     try:
-        migrations = (MIGRATION, OUTCOME_MIGRATION)
+        migrations = HISTORICAL_MIGRATIONS
         sql_by_migration = [
             (migration.name, migration.read_text(encoding="utf-8"))
             for migration in migrations
@@ -221,6 +254,10 @@ def main() -> int:
     failures.extend(
         ("migration sequence", failure)
         for failure in validate_migration_order(migrations)
+    )
+    failures.extend(
+        ("migration safety", failure)
+        for failure in validate_historical_migrations(migrations)
     )
     if failures:
         for name, failure in failures:

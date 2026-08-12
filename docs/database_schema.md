@@ -8,6 +8,23 @@ references. It does not connect the application to Supabase, persist a request,
 upload evidence, or decide whether a vehicle is authorized. Those behaviors
 belong to later milestones.
 
+## Canonical Phase 2 contract
+
+The canonical repository contract is the Day 9 vocabulary extended by the Day
+11 outcome fields. The local application uses `normalized_plate`, lowercase
+internal vehicle statuses (`active`, `inactive`, `blocked`), UUID correlation
+IDs, complete OCR/decision/evidence metadata, and nonnegative timing maps.
+Public vehicle responses continue to expose uppercase statuses.
+
+The optional Supabase adapter is fail-closed until schema readiness is
+explicitly established. It uses insert semantics for vehicle creation and
+targeted ID updates; it never silently upserts or falls back to memory.
+`schema_ready=True` is currently used only by deterministic adapter contract
+tests. No runtime configuration or user-provided environment value can
+self-assert readiness. Production Supabase activation remains blocked pending
+authorized migration-ledger/schema evidence and a later reviewed readiness
+mechanism.
+
 ## Versioned migration
 
 The initial migration is
@@ -38,12 +55,14 @@ backend\.venv\Scripts\python.exe scripts\validate_schema.py
 backend\.venv\Scripts\python.exe -m pytest -p no:cacheprovider backend\tests -k repositor
 ```
 
-The validator performs deterministic structural checks against the retained
-migration without a database, Docker, Supabase CLI, credentials, or network.
+The validator performs deterministic structural checks against all retained
+migrations without a database, Docker, Supabase CLI, credentials, or network.
 It verifies the required tables, constraints, indexes, timestamps, RLS,
 revocations, transaction boundary, and absence of embedded credentials or Day
 10 decision fields. This is documented local validation, not proof that a
-remote project or future migration has applied successfully.
+remote project or future migration has applied successfully. It intentionally
+reports the Day 9/11 versus Day 19 conflict and unknown live migration ledger;
+see [`database_reconciliation.md`](database_reconciliation.md).
 
 When a clean Supabase development project is available, apply migrations with
 the official Supabase migration workflow and inspect the resulting tables,
