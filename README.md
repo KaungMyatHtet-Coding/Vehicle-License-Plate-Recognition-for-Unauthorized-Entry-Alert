@@ -29,17 +29,22 @@ Online still-image recognition is the primary deployment flow. Bounded short vid
 
 ---
 
-## 📊 System Performance & Evaluation Baseline
+## 📊 Evaluation Baseline
 
-Evaluated via reproducible runner (`scripts/evaluate_system.py`) over synthetic and ground-truth sample datasets:
+`sample-data/evaluation` contains four project-generated synthetic fixtures
+(three positive images, one negative/no-plate image, and four labeled plate
+instances). They are development/regression data reused during implementation,
+not an independent evaluation set. The Phase 7 evaluator reports plate-level
+TP/FP/FN, OCR pairs, negative-only false-alert/no-plate metrics, authorization
+metrics, and latency distributions, but its output must not be interpreted as
+real-world, Myanmar-specific, or production performance. Four images are also
+insufficient for reliable p95 or performance claims.
 
-| KPI Metric | Measured Value | Standard Target | Status |
-|---|---|---|---|
-| **Detection Recall** | **100.0%** | ≥ 90.0% | ✅ PASS |
-| **Detection Precision** | **100.0%** | ≥ 90.0% | ✅ PASS |
-| **False Alert Rate** | **0.0%** | ≤ 5.0% | ✅ PASS |
-| **Mean Latency** | **416.6 ms** | ≤ 2000 ms | ✅ PASS (Fast CPU inference) |
-| **Automated Test Suite** | **446 Passed** | 300+ Tests | ✅ **313 Backend + 133 Frontend** |
+Run the explicitly development-only report with:
+
+```powershell
+backend\.venv\Scripts\python.exe scripts\evaluate_system.py --input sample-data\evaluation --output artifacts\evaluation
+```
 
 ---
 
