@@ -259,18 +259,40 @@ Run these commands from the repository root (`D:\CVPX`):
 cd D:\CVPX
 py -3.12 -m venv backend\.venv
 backend\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
 python -m pip install -r backend\requirements-dev.txt
-python -m pip install --no-deps rapidocr==3.9.2
 ```
 
-The final command is required for the Day 7 benchmark and Day 8 local OCR.
-RapidOCR declares the GUI `opencv-python` package by name even though the
-project intentionally uses `opencv-python-headless`. Installing it with
-`--no-deps` preserves the headless build; its other research dependencies are
-pinned in `requirements-dev.txt`. Consequently, `python -m pip check` reports
-only that metadata-level `opencv-python` requirement as missing. Do not install
-both OpenCV distributions to silence that known warning.
+Production and development requirements use explicit versions. Do not add an
+unpinned fallback install or install a second OpenCV distribution to work
+around metadata from a package dependency.
+
+## Local container prerequisite
+
+The detector requires the ignored local file `models/day4/best.onnx`. It is not
+tracked or redistributed by this repository. Before a local Docker build,
+provide that file in the build context and verify the documented size
+(`12,265,233` bytes) and SHA-256
+(`a599289e5c25ab693fd7c6a152093f95fc34aef9b59b2c798127173e6e7ba2d9`). The
+Docker build fails closed when the file is absent or mismatched. Model license
+and attribution verification remains an unresolved review item.
+
+Docker is local-only in this phase. Publish the container on loopback, for
+example `127.0.0.1:8000:8000`; do not treat the Dockerfile or `render.yaml` as
+verified public deployment configuration.
+
+The current local verification environment reports `opencv-python==5.0.0.93`,
+while the clean-container manifest declares
+`opencv-python-headless==4.12.0.88`. Clean-container compatibility remains
+unverified; do not change the pinned headless dependency based only on the
+local distribution.
+
+The later local-only Docker commands are documented here but are not executed
+in Phase 3:
+
+```powershell
+docker build --file backend/Dockerfile --tag cvpx-local:phase3 .
+docker run --rm --publish 127.0.0.1:8000:8000 cvpx-local:phase3
+```
 
 Then remain at the repository root and start the development server:
 

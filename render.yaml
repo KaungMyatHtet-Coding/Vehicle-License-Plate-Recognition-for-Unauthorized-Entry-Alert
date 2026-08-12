@@ -1,27 +1,2 @@
-# Render Blueprint specification for Day 19 Free-Tier Deployment
-# Free tier service with cold-start tolerance and health check
-
-services:
-  - type: web
-    name: cvpx-backend
-    runtime: docker
-    dockerfilePath: backend/Dockerfile
-    dockerContext: .
-    plan: free
-    region: singapore
-    envVars:
-      - key: APP_ENV
-        value: production
-      - key: LOG_LEVEL
-        value: INFO
-      - key: FRONTEND_ORIGINS
-        value: https://cvpx.vercel.app,http://localhost:3000
-      - key: DETECTOR_MODEL_PATH
-        value: models/day4/best.onnx
-      - key: DETECTOR_CONFIDENCE_THRESHOLD
-        value: 0.15
-      - key: OCR_MIN_CONFIDENCE
-        value: 0.80
-      - key: DECISION_MIN_CONFIDENCE
-        value: 0.80
-    healthCheckPath: /health
+# Deferred Render reference only. Public deployment is unsupported for the
+# current localhost-only submission; no active service or secret is configured.
