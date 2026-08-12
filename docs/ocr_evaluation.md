@@ -1,5 +1,10 @@
 # Day 7 local OCR evaluation
 
+> Phase 7 classification: the four synthetic crops and their 24 variants per
+> mode are development/regression fixtures reused during implementation. They
+> are not an independent evaluation set and do not support real-world or
+> Myanmar-specific OCR claims.
+
 ## Decision
 
 Use RapidOCR 3.9.2 in **recognition-only mode** as the primary OCR baseline for

@@ -1,5 +1,11 @@
 # Plate-detector evaluation
 
+> Phase 7 classification: all four-image results in this document are
+> development/regression-fixture measurements, not independent or real-world
+> accuracy evidence. The set contains three positive images, one negative image,
+> and four labeled plate instances. No Myanmar-road or legally independent
+> evaluation set is present.
+
 **Research started:** July 27, 2026
 **Primary verification:** July 28, 2026
 **Branch:** `research/plate-detector`
