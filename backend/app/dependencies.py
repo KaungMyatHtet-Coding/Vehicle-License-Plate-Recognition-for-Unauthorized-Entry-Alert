@@ -1,12 +1,14 @@
-"""Shared process-local application dependencies with Supabase database support."""
+"""Explicit, deterministic application dependency construction."""
 
 from dataclasses import dataclass
 import logging
 import threading
+from collections.abc import Callable
+from typing import Any
 
 from supabase import create_client
 
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 from app.repositories.contracts import (
     AuthorizedVehicleRepository,
     DetectionLogRepository,
@@ -38,40 +40,53 @@ _dependencies: ApplicationDependencies | None = None
 _lock = threading.Lock()
 
 
+def build_application_dependencies(
+    settings: Settings,
+    *,
+    supabase_client_factory: Callable[[str, str], Any] = create_client,
+) -> ApplicationDependencies:
+    """Build one coherent adapter set without implicit fallback behavior."""
+
+    if settings.repository_mode == "memory":
+        return ApplicationDependencies(
+            vehicles=InMemoryAuthorizedVehicleRepository(),
+            detection_logs=InMemoryDetectionLogRepository(),
+            recognition_activity=InMemoryRecognitionActivityRepository(),
+            evidence_storage=InMemoryEvidenceStorage(),
+        )
+
+    if not settings.supabase_url or not settings.supabase_service_role_key:
+        raise RuntimeError("Supabase repository configuration is incomplete.")
+    try:
+        client = supabase_client_factory(
+            settings.supabase_url, settings.supabase_service_role_key
+        )
+    except Exception:
+        raise RuntimeError("Supabase repository initialization failed.") from None
+    return ApplicationDependencies(
+        vehicles=SupabaseAuthorizedVehicleRepository(client),
+        detection_logs=SupabaseDetectionLogRepository(client),
+        recognition_activity=InMemoryRecognitionActivityRepository(),
+        evidence_storage=InMemoryEvidenceStorage(),
+    )
+
+
+def reset_application_dependencies() -> None:
+    """Clear the supported process cache for tests and controlled reconfiguration."""
+
+    global _dependencies
+    with _lock:
+        _dependencies = None
+
+
 def get_application_dependencies() -> ApplicationDependencies:
+    """Return a shared dependency set selected by explicit repository mode."""
+
     global _dependencies
     if _dependencies is None:
         with _lock:
             if _dependencies is None:
                 settings = get_settings()
-
-                if settings.supabase_url and settings.supabase_service_role_key:
-                    try:
-                        logger.info("Initializing Supabase database client...")
-                        client = create_client(
-                            settings.supabase_url, settings.supabase_service_role_key
-                        )
-                        vehicles_repo = SupabaseAuthorizedVehicleRepository(client)
-                        detection_logs_repo = SupabaseDetectionLogRepository(client)
-                        logger.info("Successfully connected to Supabase Live Database!")
-                    except Exception as exc:
-                        logger.warning(
-                            "Failed to connect to Supabase (%s); falling back to InMemory repositories.",
-                            exc,
-                        )
-                        vehicles_repo = InMemoryAuthorizedVehicleRepository()
-                        detection_logs_repo = InMemoryDetectionLogRepository()
-                else:
-                    logger.info(
-                        "No Supabase credentials found; using InMemory repositories."
-                    )
-                    vehicles_repo = InMemoryAuthorizedVehicleRepository()
-                    detection_logs_repo = InMemoryDetectionLogRepository()
-
-                _dependencies = ApplicationDependencies(
-                    vehicles=vehicles_repo,
-                    detection_logs=detection_logs_repo,
-                    recognition_activity=InMemoryRecognitionActivityRepository(),
-                    evidence_storage=InMemoryEvidenceStorage(),
-                )
+                logger.info("Initializing %s repositories.", settings.repository_mode)
+                _dependencies = build_application_dependencies(settings)
     return _dependencies

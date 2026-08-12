@@ -1,10 +1,12 @@
 """Environment-based settings for the backend foundation."""
 
 from functools import lru_cache
+import os
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
+from urllib.parse import urlparse
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from pydantic import field_validator
 
@@ -13,15 +15,27 @@ class Settings(BaseSettings):
     """Safe development settings; external services are not required."""
 
     model_config = SettingsConfigDict(
-        env_file=("backend/.env", ".env"),
+        env_file=(
+            None
+            if os.environ.get("CVPX_DISABLE_DOTENV") == "1"
+            else ("backend/.env", ".env")
+        ),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
     )
 
-    supabase_url: str | None = Field(
-        default=None, validation_alias="NEXT_PUBLIC_SUPABASE_URL"
+    app_mode: Literal["localhost", "production"] = Field(
+        default="localhost", validation_alias="APP_MODE"
     )
+    repository_mode: Literal["memory", "supabase"] = Field(
+        default="memory", validation_alias="REPOSITORY_MODE"
+    )
+    enable_experimental_video: bool = Field(
+        default=False, validation_alias="ENABLE_EXPERIMENTAL_VIDEO"
+    )
+
+    supabase_url: str | None = Field(default=None, validation_alias="SUPABASE_URL")
     supabase_service_role_key: str | None = Field(
         default=None, validation_alias="SUPABASE_SERVICE_ROLE_KEY"
     )
@@ -119,6 +133,40 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
+
+    @model_validator(mode="after")
+    def validate_runtime_boundary(self) -> "Settings":
+        """Keep the default prototype on loopback and validate explicit adapters."""
+
+        if self.repository_mode == "supabase" and not (
+            self.supabase_url and self.supabase_service_role_key
+        ):
+            raise ValueError("Supabase repository configuration is incomplete.")
+        if self.app_mode == "localhost":
+            if self.app_host not in {"127.0.0.1", "localhost", "::1"}:
+                raise ValueError("Localhost mode requires a loopback application host.")
+            if not self.frontend_origins or any(
+                not self._is_loopback_origin(origin) for origin in self.frontend_origins
+            ):
+                raise ValueError("Localhost mode requires loopback frontend origins.")
+        return self
+
+    @staticmethod
+    def _is_loopback_origin(origin: str) -> bool:
+        try:
+            parsed = urlparse(origin)
+            return (
+                parsed.scheme in {"http", "https"}
+                and parsed.hostname in {"127.0.0.1", "localhost", "::1"}
+                and parsed.username is None
+                and parsed.password is None
+                and not parsed.path.rstrip("/")
+                and not parsed.params
+                and not parsed.query
+                and not parsed.fragment
+            )
+        except ValueError:
+            return False
 
 
 @lru_cache

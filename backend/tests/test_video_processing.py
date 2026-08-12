@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import os
+import subprocess
+import sys
 import tempfile
 from typing import Generator
 
@@ -11,7 +13,6 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.routes.recognition import get_orchestration_service
 from app.dependencies import get_application_dependencies
 from app.main import app
 from app.schemas.detection import (
@@ -220,61 +221,48 @@ def test_video_processing_frame_sampling_and_duplicate_suppression() -> None:
         assert det.suppressed_as_duplicate is True
 
 
-def test_api_analyze_video_endpoint_e2e() -> None:
-    deps = get_application_dependencies()
-    from app.core.config import get_settings
-    from app.services.authorization_decision import AuthorizationDecisionService
-    from app.services.detection_logging import DetectionLoggingService
-    from app.services.recognition_orchestration import RecognitionOrchestrationService
+def test_api_analyze_video_endpoint_is_disabled_by_default() -> None:
+    res = client.post("/api/recognition/analyze-video")
+    assert res.status_code == 404
 
-    settings = get_settings()
-    orch_svc = RecognitionOrchestrationService(
-        detector=MockDetector(),  # type: ignore[arg-type]
-        ocr=MockOcr(normalized_text="YGN1234"),  # type: ignore[arg-type]
-        decision=AuthorizationDecisionService(deps.vehicles, settings),
-        logging=DetectionLoggingService(
-            deps.detection_logs, deps.evidence_storage, settings
-        ),
+
+def test_api_analyze_video_opt_in_registers_route_and_sanitizes_errors() -> None:
+    """Verify opt-in behavior in a fresh process without changing the global app."""
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "CVPX_DISABLE_DOTENV": "1",
+            "APP_MODE": "localhost",
+            "REPOSITORY_MODE": "memory",
+            "ENABLE_EXPERIMENTAL_VIDEO": "true",
+            "APP_HOST": "127.0.0.1",
+            "FRONTEND_ORIGINS": "http://localhost:3000",
+        }
     )
-    app.dependency_overrides[get_orchestration_service] = lambda: orch_svc
+    environment.pop("SUPABASE_URL", None)
+    environment.pop("SUPABASE_SERVICE_ROLE_KEY", None)
 
-    try:
-        video_bytes = generate_test_video_bytes(duration_sec=1.5, fps=10)
-        res = client.post(
-            "/api/recognition/analyze-video",
-            files={"file": ("test_car.mp4", video_bytes, "video/mp4")},
-            headers={"x-correlation-id": "test-cid-999"},
-        )
-        assert res.status_code == 200
-        data = res.json()
-        assert data["correlation_id"] == "test-cid-999"
-        assert data["filename"] == "test_car.mp4"
-        assert data["duration_seconds"] == 1.5
-        assert data["unique_plates_count"] == 1
-        assert len(data["detections"]) > 0
-        assert "timings" in data
-        assert data["timings"]["total_ms"] > 0
-    finally:
-        app.dependency_overrides.clear()
+    probe = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            """
+from fastapi.testclient import TestClient
+from app.main import app
 
-
-def test_api_analyze_video_error_sanitization() -> None:
-    # 1. Reject unsupported extension
-    res1 = client.post(
-        "/api/recognition/analyze-video",
-        files={"file": ("document.pdf", b"not-a-video", "application/pdf")},
+path = "/api/recognition/analyze-video"
+response = TestClient(app).post(
+    path, files={"file": ("document.pdf", b"not-a-video", "application/pdf")}
+)
+print(path in app.openapi()["paths"])
+print(response.status_code, response.json()["error"]["code"])
+""",
+        ],
+        cwd=os.path.dirname(os.path.dirname(__file__)),
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=True,
     )
-    assert res1.status_code == 400
-    err1 = res1.json()["error"]
-    assert err1["code"] == "VIDEO_FORMAT_UNSUPPORTED"
-    assert "correlation_id" in err1
 
-    # 2. Reject empty file
-    res2 = client.post(
-        "/api/recognition/analyze-video",
-        files={"file": ("empty.mp4", b"", "video/mp4")},
-    )
-    assert res2.status_code == 400
-    err2 = res2.json()["error"]
-    assert err2["code"] == "VIDEO_EMPTY"
-    assert "correlation_id" in err2
+    assert probe.stdout.splitlines() == ["True", "400 VIDEO_FORMAT_UNSUPPORTED"]
