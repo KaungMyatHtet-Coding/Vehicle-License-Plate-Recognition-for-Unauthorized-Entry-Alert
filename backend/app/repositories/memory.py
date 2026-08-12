@@ -51,6 +51,125 @@ def _validate_timestamp(value: datetime, field: str) -> None:
         )
 
 
+def validate_authorized_vehicle_record(record: AuthorizedVehicleRecord) -> None:
+    """Validate one vehicle record using the canonical repository contract."""
+
+    if not isinstance(record.id, UUID):
+        raise RepositoryError(
+            "REPOSITORY_RECORD_INVALID", "The vehicle record is invalid."
+        )
+    if not PLATE_PATTERN.fullmatch(record.normalized_plate):
+        raise RepositoryError(
+            "REPOSITORY_PLATE_INVALID",
+            "The normalized plate must contain only uppercase ASCII letters and digits.",
+        )
+    if record.status not in ("active", "inactive", "blocked"):
+        raise RepositoryError(
+            "REPOSITORY_STATUS_INVALID", "The vehicle status is unsupported."
+        )
+    _validate_timestamp(record.created_at, "created_at")
+    _validate_timestamp(record.updated_at, "updated_at")
+    if record.valid_from is not None:
+        _validate_timestamp(record.valid_from, "valid_from")
+    if record.valid_until is not None:
+        _validate_timestamp(record.valid_until, "valid_until")
+    if (
+        record.valid_from is not None
+        and record.valid_until is not None
+        and record.valid_until <= record.valid_from
+    ):
+        raise RepositoryError(
+            "REPOSITORY_VALIDITY_INVALID",
+            "valid_until must be later than valid_from.",
+        )
+
+
+def validate_detection_log_record(record: DetectionLogRecord) -> None:
+    """Validate one detection log using the canonical repository contract."""
+
+    if not isinstance(record.id, UUID) or not isinstance(record.correlation_id, UUID):
+        raise RepositoryError(
+            "REPOSITORY_RECORD_INVALID", "The detection log is invalid."
+        )
+    if not isinstance(record.raw_text, str) or not isinstance(
+        record.normalized_text, str
+    ):
+        raise RepositoryError(
+            "REPOSITORY_RECORD_INVALID", "The detection log is invalid."
+        )
+    if record.normalized_text and not PLATE_PATTERN.fullmatch(record.normalized_text):
+        raise RepositoryError(
+            "REPOSITORY_PLATE_INVALID",
+            "Normalized OCR text must contain only uppercase ASCII letters and digits.",
+        )
+    if record.confidence is not None and (
+        isinstance(record.confidence, bool)
+        or not isinstance(record.confidence, (int, float))
+        or not math.isfinite(float(record.confidence))
+        or not 0.0 <= float(record.confidence) <= 1.0
+    ):
+        raise RepositoryError(
+            "REPOSITORY_CONFIDENCE_INVALID",
+            "OCR confidence must be between zero and one.",
+        )
+    if (
+        record.ocr_status not in ("recognized", "manual_review")
+        or (record.ocr_status == "recognized" and record.review_reason is not None)
+        or (
+            record.ocr_status == "manual_review"
+            and record.review_reason not in ("OCR_EMPTY", "OCR_LOW_CONFIDENCE")
+        )
+    ):
+        raise RepositoryError(
+            "REPOSITORY_OCR_STATE_INVALID",
+            "The OCR status and review reason are inconsistent.",
+        )
+    if (
+        record.decision not in DECISION_REASONS
+        or record.decision_reason not in DECISION_REASONS[record.decision]
+        or (
+            record.matched_vehicle_id is not None
+            and not isinstance(record.matched_vehicle_id, UUID)
+        )
+        or (record.decision == "AUTHORIZED" and record.matched_vehicle_id is None)
+    ):
+        raise RepositoryError(
+            "REPOSITORY_DECISION_INVALID",
+            "The authorization decision metadata is inconsistent.",
+        )
+    evidence_values = (record.evidence_bucket, record.evidence_object_path)
+    if (evidence_values[0] is None) != (evidence_values[1] is None):
+        raise RepositoryError(
+            "REPOSITORY_EVIDENCE_INVALID",
+            "Evidence bucket and object path must be set together.",
+        )
+    if record.evidence_object_path is not None and (
+        not EVIDENCE_BUCKET_PATTERN.fullmatch(record.evidence_bucket or "")
+        or not record.evidence_object_path
+        or len(record.evidence_object_path) > 1024
+        or record.evidence_object_path.startswith("/")
+        or "\\" in record.evidence_object_path
+        or ".." in record.evidence_object_path.split("/")
+    ):
+        raise RepositoryError(
+            "REPOSITORY_EVIDENCE_INVALID",
+            "The evidence object path must be relative and traversal-free.",
+        )
+    if not isinstance(record.timings, dict) or any(
+        not isinstance(key, str)
+        or isinstance(value, bool)
+        or not isinstance(value, (int, float))
+        or not math.isfinite(float(value))
+        or value < 0
+        for key, value in record.timings.items()
+    ):
+        raise RepositoryError(
+            "REPOSITORY_TIMINGS_INVALID",
+            "Detection timings must contain non-negative numeric values.",
+        )
+    _validate_timestamp(record.created_at, "created_at")
+
+
 class InMemoryAuthorizedVehicleRepository:
     """Enforce the migration's normalized-plate uniqueness in memory."""
 
@@ -70,30 +189,7 @@ class InMemoryAuthorizedVehicleRepository:
             return self._records.get(normalized_plate)
 
     def add(self, record: AuthorizedVehicleRecord) -> None:
-        if not PLATE_PATTERN.fullmatch(record.normalized_plate):
-            raise RepositoryError(
-                "REPOSITORY_PLATE_INVALID",
-                "The normalized plate must contain only uppercase ASCII letters and digits.",
-            )
-        if record.status not in ("active", "inactive", "blocked"):
-            raise RepositoryError(
-                "REPOSITORY_STATUS_INVALID", "The vehicle status is unsupported."
-            )
-        _validate_timestamp(record.created_at, "created_at")
-        _validate_timestamp(record.updated_at, "updated_at")
-        if record.valid_from is not None:
-            _validate_timestamp(record.valid_from, "valid_from")
-        if record.valid_until is not None:
-            _validate_timestamp(record.valid_until, "valid_until")
-        if (
-            record.valid_from is not None
-            and record.valid_until is not None
-            and record.valid_until <= record.valid_from
-        ):
-            raise RepositoryError(
-                "REPOSITORY_VALIDITY_INVALID",
-                "valid_until must be later than valid_from.",
-            )
+        validate_authorized_vehicle_record(record)
         with self._lock:
             if record.normalized_plate in self._records:
                 raise RepositoryError(
@@ -160,83 +256,7 @@ class InMemoryDetectionLogRepository:
             return replace(record, timings=deepcopy(record.timings)) if record else None
 
     def add(self, record: DetectionLogRecord) -> None:
-        if record.normalized_text and not PLATE_PATTERN.fullmatch(
-            record.normalized_text
-        ):
-            raise RepositoryError(
-                "REPOSITORY_PLATE_INVALID",
-                "Normalized OCR text must contain only uppercase ASCII letters and digits.",
-            )
-        if record.confidence is not None and (
-            isinstance(record.confidence, bool)
-            or not isinstance(record.confidence, (int, float))
-            or not math.isfinite(float(record.confidence))
-            or not 0.0 <= float(record.confidence) <= 1.0
-        ):
-            raise RepositoryError(
-                "REPOSITORY_CONFIDENCE_INVALID",
-                "OCR confidence must be between zero and one.",
-            )
-        expected_reason = {
-            "recognized": None,
-            "manual_review": record.review_reason,
-        }
-        if (
-            record.ocr_status not in expected_reason
-            or (record.ocr_status == "recognized" and record.review_reason is not None)
-            or (
-                record.ocr_status == "manual_review"
-                and record.review_reason not in ("OCR_EMPTY", "OCR_LOW_CONFIDENCE")
-            )
-        ):
-            raise RepositoryError(
-                "REPOSITORY_OCR_STATE_INVALID",
-                "The OCR status and review reason are inconsistent.",
-            )
-        if (
-            record.decision not in DECISION_REASONS
-            or record.decision_reason not in DECISION_REASONS[record.decision]
-            or (
-                record.matched_vehicle_id is not None
-                and not isinstance(record.matched_vehicle_id, UUID)
-            )
-            or (record.decision == "AUTHORIZED" and record.matched_vehicle_id is None)
-        ):
-            raise RepositoryError(
-                "REPOSITORY_DECISION_INVALID",
-                "The authorization decision metadata is inconsistent.",
-            )
-        evidence_values = (record.evidence_bucket, record.evidence_object_path)
-        if (evidence_values[0] is None) != (evidence_values[1] is None):
-            raise RepositoryError(
-                "REPOSITORY_EVIDENCE_INVALID",
-                "Evidence bucket and object path must be set together.",
-            )
-        if record.evidence_object_path is not None and (
-            not EVIDENCE_BUCKET_PATTERN.fullmatch(record.evidence_bucket or "")
-            or not record.evidence_object_path
-            or len(record.evidence_object_path) > 1024
-            or record.evidence_object_path.startswith("/")
-            or "\\" in record.evidence_object_path
-            or ".." in record.evidence_object_path.split("/")
-        ):
-            raise RepositoryError(
-                "REPOSITORY_EVIDENCE_INVALID",
-                "The evidence object path must be relative and traversal-free.",
-            )
-        if not isinstance(record.timings, dict) or any(
-            not isinstance(key, str)
-            or isinstance(value, bool)
-            or not isinstance(value, (int, float))
-            or not math.isfinite(float(value))
-            or value < 0
-            for key, value in record.timings.items()
-        ):
-            raise RepositoryError(
-                "REPOSITORY_TIMINGS_INVALID",
-                "Detection timings must contain non-negative numeric values.",
-            )
-        _validate_timestamp(record.created_at, "created_at")
+        validate_detection_log_record(record)
         stored = replace(record, timings=deepcopy(record.timings))
         with self._lock:
             if record.correlation_id in self._records:

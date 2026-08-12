@@ -356,3 +356,38 @@ def test_schema_validator_requires_durable_timing_constraint() -> None:
     )
 
     assert "missing finite non-negative timings constraint" in validate_schema(sql)
+
+
+def test_schema_validator_reports_historical_conflict_and_unknown_ledger() -> None:
+    from scripts.validate_schema import (
+        HISTORICAL_MIGRATIONS,
+        validate_historical_migrations,
+    )
+
+    failures = validate_historical_migrations(HISTORICAL_MIGRATIONS)
+    assert (
+        "migration ledger status unknown: live Supabase history was not inspected"
+        in failures
+    )
+    assert any("historical schema conflict" in failure for failure in failures)
+
+
+def test_historical_migrations_are_unchanged_from_branch_base() -> None:
+    import subprocess
+
+    from scripts.validate_schema import HISTORICAL_MIGRATIONS
+
+    root = Path(__file__).resolve().parents[2]
+    result = subprocess.run(
+        [
+            "git",
+            "diff",
+            "--exit-code",
+            "--",
+            *(str(path.relative_to(root)) for path in HISTORICAL_MIGRATIONS),
+        ],
+        cwd=root,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

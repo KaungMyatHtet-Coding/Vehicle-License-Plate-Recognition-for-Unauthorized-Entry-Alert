@@ -26,6 +26,15 @@ configuration, and never silently falls back to memory. Default unit tests
 override ignored dotenv configuration before importing the application and
 reject external network connections; no live service is required.
 
+Phase 2 keeps the localhost repository contract canonical: vehicle persistence
+uses `normalized_plate` and lowercase internal statuses, while public vehicle
+responses retain uppercase statuses. Detection-log persistence retains the
+complete OCR, decision, matched-vehicle, evidence, timing, and timestamp
+fields. The optional Supabase adapter requires explicit schema-readiness
+evidence and otherwise fails closed. Historical migration reconciliation is
+blocked because the live migration ledger is unknown; see
+[`docs/database_reconciliation.md`](../docs/database_reconciliation.md).
+
 ## Backend foundation
 
 This directory contains the tested validation, detection, preprocessing, OCR,
