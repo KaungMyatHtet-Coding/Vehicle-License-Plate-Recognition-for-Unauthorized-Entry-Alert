@@ -9,9 +9,13 @@ from fastapi import APIRouter, Depends, Header, UploadFile, status
 from fastapi.responses import JSONResponse
 
 from app.api.routes.recognition import get_orchestration_service
+from app.core.config import get_settings
 from app.schemas.video import VideoProcessingResponse
 from app.services.recognition_orchestration import RecognitionOrchestrationService
-from app.services.video_processing import VideoProcessingService, VideoValidationError
+from app.services.video_processing import (
+    VideoProcessingService,
+    VideoValidationError,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,10 +34,22 @@ async def analyze_video(
 ) -> VideoProcessingResponse | JSONResponse:
     """Analyze a bounded short video file frame by frame for license plates."""
     correlation_id = x_correlation_id or str(uuid4())
-    filename = file.filename or "video.mp4"
+    filename = file.filename or ""
+    if not filename:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "error": {
+                    "code": "VIDEO_FILENAME_REQUIRED",
+                    "message": "A video filename is required.",
+                    "correlation_id": correlation_id,
+                }
+            },
+        )
 
     try:
-        content = await file.read()
+        max_bytes = get_settings().video_max_upload_bytes
+        content = await file.read(max_bytes + 1)
     except Exception as exc:
         logger.warning(
             "Video file read failed for correlation_id=%s filename=%s error=%s",
@@ -52,16 +68,18 @@ async def analyze_video(
             },
         )
 
-    svc = VideoProcessingService(orchestration=orch_svc)
     try:
+        svc = VideoProcessingService(
+            orchestration=orch_svc,
+            settings=get_settings(),
+        )
         return svc.process_video(
             video_bytes=content, filename=filename, correlation_id=correlation_id
         )
     except VideoValidationError as err:
         logger.info(
-            "Video validation failed code=%s message=%s correlation_id=%s",
+            "Video processing failed code=%s correlation_id=%s",
             err.code,
-            err.message,
             correlation_id,
         )
         return JSONResponse(
@@ -74,11 +92,10 @@ async def analyze_video(
                 }
             },
         )
-    except Exception as exc:
+    except Exception:
         logger.error(
-            "Unhandled video processing error correlation_id=%s error=%s",
+            "Unhandled video processing error correlation_id=%s",
             correlation_id,
-            exc,
             exc_info=True,
         )
         return JSONResponse(
@@ -91,3 +108,5 @@ async def analyze_video(
                 }
             },
         )
+    finally:
+        await file.close()

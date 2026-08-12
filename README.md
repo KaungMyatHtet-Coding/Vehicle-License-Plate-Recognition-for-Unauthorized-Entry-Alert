@@ -14,7 +14,8 @@ image → validate → detect plate (YOLOv8 ONNX) → crop/preprocess
 
 Still-image recognition is the supported localhost workflow. The standalone
 OpenCV webcam is a local demonstration only. Phase 6 short-video processing is
-disabled/experimental and intentionally deferred.
+experimental, localhost-only, disabled by default, and limited to bounded
+uploaded files; it is not live streaming, surveillance, or a performance claim.
 
 ---
 

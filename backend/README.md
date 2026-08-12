@@ -2,13 +2,19 @@
 
 The supported delivery mode is a localhost-only university prototype. The
 backend defaults to loopback binding, loopback frontend origins, coherent
-process-local memory repositories, and disabled experimental video:
+process-local memory repositories, and disabled-by-default experimental video:
 
 ```text
 APP_MODE=localhost
 REPOSITORY_MODE=memory
 ENABLE_EXPERIMENTAL_VIDEO=false
 ```
+
+Phase 6 short-video processing is available only after explicitly setting
+`ENABLE_EXPERIMENTAL_VIDEO=true` in an isolated local process. It accepts
+bounded `.mp4`, `.avi`, or `.mov` uploads (25 MiB, 10 seconds, 300 decoded
+frames, 20 sampled frames, and 2-observation exact consensus by default).
+It is not live streaming or production surveillance.
 
 `APP_MODE=localhost` validates the supported application settings: `APP_HOST`
 and configured frontend origins must be loopback values. This rule does not

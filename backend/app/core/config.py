@@ -99,6 +99,54 @@ class Settings(BaseSettings):
         le=0.5,
         validation_alias="CANDIDATE_AMBIGUITY_MARGIN",
     )
+    video_allowed_extensions: Annotated[list[str], NoDecode] = Field(
+        default=[".mp4", ".avi", ".mov"], validation_alias="VIDEO_ALLOWED_EXTENSIONS"
+    )
+    video_max_upload_bytes: int = Field(
+        default=25 * 1024 * 1024,
+        ge=1,
+        le=50 * 1024 * 1024,
+        validation_alias="VIDEO_MAX_UPLOAD_BYTES",
+    )
+    video_max_duration_seconds: float = Field(
+        default=10.0,
+        gt=0.0,
+        le=60.0,
+        validation_alias="VIDEO_MAX_DURATION_SECONDS",
+    )
+    video_target_fps: float = Field(
+        default=2.0, gt=0.0, le=10.0, validation_alias="VIDEO_TARGET_FPS"
+    )
+    video_max_decoded_frames: int = Field(
+        default=300, ge=1, le=2000, validation_alias="VIDEO_MAX_DECODED_FRAMES"
+    )
+    video_max_sampled_frames: int = Field(
+        default=20, ge=1, le=100, validation_alias="VIDEO_MAX_SAMPLED_FRAMES"
+    )
+    video_max_frame_width: int = Field(
+        default=1920, ge=32, le=10_000, validation_alias="VIDEO_MAX_FRAME_WIDTH"
+    )
+    video_max_frame_height: int = Field(
+        default=1080, ge=32, le=10_000, validation_alias="VIDEO_MAX_FRAME_HEIGHT"
+    )
+    video_max_frame_pixels: int = Field(
+        default=2_073_600,
+        ge=1024,
+        le=25_000_000,
+        validation_alias="VIDEO_MAX_FRAME_PIXELS",
+    )
+    video_consensus_min_observations: int = Field(
+        default=2,
+        ge=2,
+        le=20,
+        validation_alias="VIDEO_CONSENSUS_MIN_OBSERVATIONS",
+    )
+    video_consensus_window_frames: int = Field(
+        default=8,
+        ge=2,
+        le=20,
+        validation_alias="VIDEO_CONSENSUS_WINDOW_FRAMES",
+    )
     decision_min_confidence: float = Field(
         default=0.80, ge=0.0, le=1.0, validation_alias="DECISION_MIN_CONFIDENCE"
     )
@@ -173,6 +221,26 @@ class Settings(BaseSettings):
             raise ValueError("SUPPORTED_PLATE_REGIONS contains an invalid prefix")
         return normalized
 
+    @field_validator("video_allowed_extensions", mode="before")
+    @classmethod
+    def parse_video_extensions(cls, value: str | list[str]) -> list[str]:
+        """Accept only a bounded list of lowercase dotted video extensions."""
+
+        values = (
+            [item.strip().lower() for item in value.split(",") if item.strip()]
+            if isinstance(value, str)
+            else value
+        )
+        if not isinstance(values, list) or not values:
+            raise ValueError("VIDEO_ALLOWED_EXTENSIONS must contain extensions")
+        normalized = [str(item).lower() for item in values]
+        supported = {".mp4", ".avi", ".mov"}
+        if any(item not in supported for item in normalized):
+            raise ValueError("VIDEO_ALLOWED_EXTENSIONS contains an invalid extension")
+        if len(set(normalized)) != len(normalized):
+            raise ValueError("VIDEO_ALLOWED_EXTENSIONS must not contain duplicates")
+        return normalized
+
     @model_validator(mode="after")
     def validate_runtime_boundary(self) -> "Settings":
         """Keep the default prototype on loopback and validate explicit adapters."""
@@ -190,6 +258,25 @@ class Settings(BaseSettings):
                 raise ValueError("Localhost mode requires loopback frontend origins.")
         if self.min_plate_length > self.max_plate_length:
             raise ValueError("MIN_PLATE_LENGTH cannot exceed MAX_PLATE_LENGTH")
+        if self.video_consensus_min_observations > self.video_consensus_window_frames:
+            raise ValueError(
+                "VIDEO_CONSENSUS_MIN_OBSERVATIONS cannot exceed VIDEO_CONSENSUS_WINDOW_FRAMES"
+            )
+        if self.video_max_sampled_frames > self.video_max_decoded_frames:
+            raise ValueError(
+                "VIDEO_MAX_SAMPLED_FRAMES cannot exceed VIDEO_MAX_DECODED_FRAMES"
+            )
+        if self.video_consensus_window_frames > self.video_max_sampled_frames:
+            raise ValueError(
+                "VIDEO_CONSENSUS_WINDOW_FRAMES cannot exceed VIDEO_MAX_SAMPLED_FRAMES"
+            )
+        if (
+            self.video_max_frame_width * self.video_max_frame_height
+            > self.video_max_frame_pixels
+        ):
+            raise ValueError(
+                "Configured video frame dimensions exceed VIDEO_MAX_FRAME_PIXELS"
+            )
         return self
 
     @staticmethod
