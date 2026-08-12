@@ -68,6 +68,7 @@ def get_orchestration_service() -> RecognitionOrchestrationService:
                         settings,
                     ),
                     dependencies.recognition_activity,
+                    settings,
                 )
     return _orchestration_service
 

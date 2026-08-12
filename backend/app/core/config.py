@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 import os
+import re
 from pathlib import Path
 from typing import Annotated, Literal
 from urllib.parse import urlparse
@@ -77,6 +78,27 @@ class Settings(BaseSettings):
     ocr_full_pipeline_fallback: bool = Field(
         default=True, validation_alias="OCR_FULL_PIPELINE_FALLBACK"
     )
+    max_recognition_candidates: int = Field(
+        default=3,
+        ge=1,
+        le=5,
+        validation_alias="MAX_RECOGNITION_CANDIDATES",
+    )
+    supported_plate_regions: Annotated[list[str], NoDecode] = Field(
+        default=["YGN", "MDY", "NPT"], validation_alias="SUPPORTED_PLATE_REGIONS"
+    )
+    min_plate_length: int = Field(
+        default=7, ge=4, le=20, validation_alias="MIN_PLATE_LENGTH"
+    )
+    max_plate_length: int = Field(
+        default=12, ge=4, le=20, validation_alias="MAX_PLATE_LENGTH"
+    )
+    candidate_ambiguity_margin: float = Field(
+        default=0.08,
+        ge=0.0,
+        le=0.5,
+        validation_alias="CANDIDATE_AMBIGUITY_MARGIN",
+    )
     decision_min_confidence: float = Field(
         default=0.80, ge=0.0, le=1.0, validation_alias="DECISION_MIN_CONFIDENCE"
     )
@@ -134,6 +156,23 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
 
+    @field_validator("supported_plate_regions", mode="before")
+    @classmethod
+    def parse_supported_plate_regions(cls, value: str | list[str]) -> list[str]:
+        """Accept bounded comma-separated region prefixes without secrets."""
+
+        values = (
+            [item.strip() for item in value.split(",") if item.strip()]
+            if isinstance(value, str)
+            else value
+        )
+        if not isinstance(values, list) or not values:
+            raise ValueError("SUPPORTED_PLATE_REGIONS must contain prefixes")
+        normalized = [str(item).upper() for item in values]
+        if any(not re.fullmatch(r"[A-Z]{2,8}", item) for item in normalized):
+            raise ValueError("SUPPORTED_PLATE_REGIONS contains an invalid prefix")
+        return normalized
+
     @model_validator(mode="after")
     def validate_runtime_boundary(self) -> "Settings":
         """Keep the default prototype on loopback and validate explicit adapters."""
@@ -149,6 +188,8 @@ class Settings(BaseSettings):
                 not self._is_loopback_origin(origin) for origin in self.frontend_origins
             ):
                 raise ValueError("Localhost mode requires loopback frontend origins.")
+        if self.min_plate_length > self.max_plate_length:
+            raise ValueError("MIN_PLATE_LENGTH cannot exceed MAX_PLATE_LENGTH")
         return self
 
     @staticmethod
