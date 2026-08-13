@@ -11,7 +11,14 @@ from app.schemas.decision import DecisionReason, DecisionStatus
 
 VehicleStatus = Literal["active", "inactive", "blocked"]
 OcrStatus = Literal["recognized", "manual_review"]
-OcrReviewReason = Literal["OCR_EMPTY", "OCR_LOW_CONFIDENCE"]
+OcrReviewReason = Literal[
+    "OCR_EMPTY",
+    "OCR_LOW_CONFIDENCE",
+    "PLATE_REGION_MISSING",
+    "PLATE_FORMAT_UNSUPPORTED",
+    "PLATE_TEXT_UNRELIABLE",
+    "MULTIPLE_PLATES_AMBIGUOUS",
+]
 
 
 @dataclass(frozen=True)

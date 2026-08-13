@@ -31,4 +31,9 @@ describe("Day 14 runtime contracts", () => {
     expect(parseAlerts(payload).items).toHaveLength(1);
     expect(() => parseAlerts({ ...payload, items: [{ ...payload.items[0], decision: "AUTHORIZED" }] })).toThrow();
   });
+
+  it("accepts backend-selected manual-review alerts", () => {
+    const payload = { items: [{ ...summary, decision: "MANUAL_REVIEW", reason: "PLATE_REGION_MISSING", alert_type: "MANUAL_REVIEW", message: "Review required." }], page: 1, page_size: 10, total_items: 1, total_pages: 1, timezone: "UTC" };
+    expect(parseAlerts(payload).items[0].alert_type).toBe("MANUAL_REVIEW");
+  });
 });

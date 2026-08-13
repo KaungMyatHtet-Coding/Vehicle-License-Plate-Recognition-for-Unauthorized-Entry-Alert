@@ -43,6 +43,33 @@ def is_plate_grammar_reliable(
     )
 
 
+def plate_review_reason(
+    normalized_text: str,
+    confidence: float | None,
+    supported_regions: list[str],
+    minimum_length: int,
+    maximum_length: int,
+    minimum_confidence: float = 0.80,
+) -> str | None:
+    """Return a truthful review reason without treating grammar as confidence."""
+
+    if not normalized_text:
+        return "OCR_EMPTY"
+    if confidence is None or confidence < minimum_confidence:
+        return "OCR_LOW_CONFIDENCE"
+    if not any(normalized_text.startswith(region) for region in supported_regions):
+        if any(character.isdigit() for character in normalized_text):
+            return "PLATE_REGION_MISSING"
+        return "PLATE_TEXT_UNRELIABLE"
+    if not minimum_length <= len(normalized_text) <= maximum_length:
+        return "PLATE_FORMAT_UNSUPPORTED"
+    if not normalized_text.isalnum() or not any(
+        character.isdigit() for character in normalized_text
+    ):
+        return "PLATE_TEXT_UNRELIABLE"
+    return None
+
+
 class PlateOcrError(RuntimeError):
     """Safe OCR configuration/runtime failure with a stable code."""
 
@@ -144,7 +171,9 @@ class RapidOcrCpuEngine:
 
         texts = tuple(getattr(output, "txts", ()) or ())
         scores = tuple(getattr(output, "scores", ()) or ())
-        raw_text = " ".join(str(value) for value in texts).strip()
+        raw_text = "\n".join(
+            str(value).strip() for value in texts if str(value).strip()
+        )
         confidence = round(float(sum(scores) / len(scores)), 6) if scores else None
         inference_ms = round((time.perf_counter() - started) * 1000, 3)
         return EngineOcrResult(raw_text, confidence, inference_ms, mode)
@@ -212,16 +241,14 @@ class PlateOcrService:
             if self._prefer_fallback(selected, fallback):
                 selected = fallback
 
-        normalized = normalize_plate_text(selected.raw_text)
+        normalized = self._reconstruct_region_body(selected.raw_text)
         if not normalized:
-            status = "manual_review"
             review_reason = "OCR_EMPTY"
         elif not self._is_reliable(selected):
-            status = "manual_review"
             review_reason = "OCR_LOW_CONFIDENCE"
         else:
-            status = "recognized"
             review_reason = None
+        status = "manual_review" if review_reason is not None else "recognized"
 
         total_ms = round((time.perf_counter() - started) * 1000, 3)
         return PlateOcrResponse(
@@ -237,6 +264,26 @@ class PlateOcrService:
             image_width=int(image.shape[1]),
             image_height=int(image.shape[0]),
         )
+
+    def _reconstruct_region_body(self, raw_text: str) -> str:
+        """Normalize ordered OCR lines and join a region with its same-crop body."""
+
+        lines = [normalize_plate_text(line) for line in raw_text.splitlines()]
+        lines = [line for line in lines if line]
+        if len(lines) > 1:
+            supported = tuple(self._settings.supported_plate_regions)
+            region = next((line for line in lines if line in supported), None)
+            body = next(
+                (
+                    line
+                    for line in lines
+                    if line != region and any(c.isdigit() for c in line)
+                ),
+                None,
+            )
+            if region and body:
+                return region + body
+        return normalize_plate_text(raw_text)
 
     def _is_reliable(self, result: EngineOcrResult) -> bool:
         return (

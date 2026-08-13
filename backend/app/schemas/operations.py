@@ -59,7 +59,9 @@ class DashboardStatistics(BaseModel):
 
 
 class AlertSummary(DetectionSummary):
-    alert_type: Literal["ENTRY_NOT_AUTHORIZED"] = "ENTRY_NOT_AUTHORIZED"
+    alert_type: Literal["ENTRY_NOT_AUTHORIZED", "MANUAL_REVIEW"] = (
+        "ENTRY_NOT_AUTHORIZED"
+    )
     message: str = "This record did not permit entry and may require operator review."
 
 

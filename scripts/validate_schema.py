@@ -11,7 +11,7 @@ BACKEND = Path(__file__).resolve().parents[1] / "backend"
 if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
-from app.schemas.decision import DecisionReason, DecisionStatus  # noqa: E402
+from app.schemas.decision import DecisionStatus  # noqa: E402
 
 MIGRATION = (
     Path(__file__).resolve().parents[1]
@@ -91,7 +91,22 @@ OUTCOME_PATTERNS = {
 }
 
 EXPECTED_STATUSES = set(get_args(DecisionStatus))
-EXPECTED_REASONS = set(get_args(DecisionReason))
+# Day 11 is immutable; validate its historical vocabulary independently from
+# later application-level review reasons.
+EXPECTED_REASONS = {
+    "ACTIVE_MATCH",
+    "VEHICLE_NOT_FOUND",
+    "VEHICLE_INACTIVE",
+    "VEHICLE_BLOCKED",
+    "VEHICLE_NOT_YET_VALID",
+    "VEHICLE_EXPIRED",
+    "OCR_EMPTY",
+    "OCR_LOW_CONFIDENCE",
+    "OCR_RESULT_INVALID",
+    "DECISION_TIME_INVALID",
+    "VEHICLE_RECORD_INVALID",
+    "VEHICLE_LOOKUP_FAILED",
+}
 EXPECTED_REASON_MAP = {
     "AUTHORIZED": {"ACTIVE_MATCH"},
     "UNAUTHORIZED": {

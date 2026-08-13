@@ -155,4 +155,11 @@ describe("Day 14 operational views", () => {
     render(<AlertsView />);
     expect((await screen.findByRole("alert")).textContent).toContain("Alerts could not be loaded");
   });
+
+  it("renders manual-review alerts distinctly", async () => {
+    vi.mocked(getAlerts).mockResolvedValueOnce({ ...alerts, items: [{ ...alerts.items[0], decision: "MANUAL_REVIEW", reason: "PLATE_REGION_MISSING", alert_type: "MANUAL_REVIEW", message: "Review required." }] });
+    render(<AlertsView />);
+    expect(await screen.findByText("Manual review")).toBeDefined();
+    expect(screen.queryByText("Entry not authorized")).toBeNull();
+  });
 });

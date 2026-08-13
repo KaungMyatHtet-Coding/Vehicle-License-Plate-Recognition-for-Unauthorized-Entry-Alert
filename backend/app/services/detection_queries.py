@@ -31,6 +31,10 @@ REASON_MESSAGES = {
     "OCR_EMPTY": "No reliable plate text was available.",
     "OCR_LOW_CONFIDENCE": "Plate text confidence requires manual review.",
     "OCR_RESULT_INVALID": "The OCR result requires manual review.",
+    "PLATE_REGION_MISSING": "The plate region could not be confirmed.",
+    "PLATE_FORMAT_UNSUPPORTED": "The plate format requires manual review.",
+    "PLATE_TEXT_UNRELIABLE": "The detected text is not reliable plate text.",
+    "MULTIPLE_PLATES_AMBIGUOUS": "Multiple plate candidates require manual review.",
     "DECISION_TIME_INVALID": "The decision time requires manual review.",
     "VEHICLE_RECORD_INVALID": "The vehicle record requires manual review.",
     "VEHICLE_LOOKUP_FAILED": "Vehicle lookup was unavailable; manual review is required.",
@@ -153,13 +157,27 @@ class DetectionQueryService:
 
     def alerts(self, *, page: int, page_size: int) -> PaginatedAlerts:
         records = [
-            item for item in self._logs.list_all() if item.decision == "UNAUTHORIZED"
+            item
+            for item in self._logs.list_all()
+            if item.decision in {"UNAUTHORIZED", "MANUAL_REVIEW"}
         ]
         total = len(records)
         start = (page - 1) * page_size
         return PaginatedAlerts(
             items=tuple(
-                AlertSummary(**self._summary(item).model_dump())
+                AlertSummary(
+                    **self._summary(item).model_dump(),
+                    alert_type=(
+                        "ENTRY_NOT_AUTHORIZED"
+                        if item.decision == "UNAUTHORIZED"
+                        else "MANUAL_REVIEW"
+                    ),
+                    message=(
+                        "This record did not permit entry and may require operator review."
+                        if item.decision == "UNAUTHORIZED"
+                        else "This record requires operator review before entry decisions."
+                    ),
+                )
                 for item in records[start : start + page_size]
             ),
             page=page,

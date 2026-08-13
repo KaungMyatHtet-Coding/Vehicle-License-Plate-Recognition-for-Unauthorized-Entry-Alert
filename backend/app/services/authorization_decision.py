@@ -23,6 +23,10 @@ DECISION_MESSAGES: dict[DecisionReason, str] = {
     "OCR_EMPTY": "Plate text could not be read; manual review is required.",
     "OCR_LOW_CONFIDENCE": "Plate text confidence is too low; manual review is required.",
     "OCR_RESULT_INVALID": "The recognition result is invalid; manual review is required.",
+    "PLATE_REGION_MISSING": "The plate region could not be confirmed; manual review is required.",
+    "PLATE_FORMAT_UNSUPPORTED": "The plate format requires manual review.",
+    "PLATE_TEXT_UNRELIABLE": "The detected text is not reliable plate text; manual review is required.",
+    "MULTIPLE_PLATES_AMBIGUOUS": "Multiple plate candidates require manual review.",
     "DECISION_TIME_INVALID": "Decision time is unavailable; manual review is required.",
     "VEHICLE_NOT_FOUND": "No matching vehicle record permits entry.",
     "VEHICLE_INACTIVE": "The matching vehicle record is inactive.",
@@ -132,8 +136,14 @@ class AuthorizationDecisionService:
         ):
             return "MANUAL_REVIEW", "OCR_RESULT_INVALID"
         if status == "manual_review":
-            if review_reason == "OCR_LOW_CONFIDENCE":
-                return "MANUAL_REVIEW", "OCR_LOW_CONFIDENCE"
+            if review_reason in {
+                "OCR_LOW_CONFIDENCE",
+                "PLATE_REGION_MISSING",
+                "PLATE_FORMAT_UNSUPPORTED",
+                "PLATE_TEXT_UNRELIABLE",
+                "MULTIPLE_PLATES_AMBIGUOUS",
+            }:
+                return "MANUAL_REVIEW", review_reason
             return "MANUAL_REVIEW", "OCR_RESULT_INVALID"
         if float(confidence) < self._minimum_confidence:
             return "MANUAL_REVIEW", "OCR_LOW_CONFIDENCE"

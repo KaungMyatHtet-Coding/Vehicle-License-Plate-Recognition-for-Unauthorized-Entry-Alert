@@ -35,6 +35,10 @@ DECISION_REASONS: dict[DecisionStatus, set[DecisionReason]] = {
     "MANUAL_REVIEW": {
         "OCR_EMPTY",
         "OCR_LOW_CONFIDENCE",
+        "PLATE_REGION_MISSING",
+        "PLATE_FORMAT_UNSUPPORTED",
+        "PLATE_TEXT_UNRELIABLE",
+        "MULTIPLE_PLATES_AMBIGUOUS",
         "OCR_RESULT_INVALID",
         "DECISION_TIME_INVALID",
         "VEHICLE_RECORD_INVALID",
@@ -117,7 +121,15 @@ def validate_detection_log_record(record: DetectionLogRecord) -> None:
         or (record.ocr_status == "recognized" and record.review_reason is not None)
         or (
             record.ocr_status == "manual_review"
-            and record.review_reason not in ("OCR_EMPTY", "OCR_LOW_CONFIDENCE")
+            and record.review_reason
+            not in (
+                "OCR_EMPTY",
+                "OCR_LOW_CONFIDENCE",
+                "PLATE_REGION_MISSING",
+                "PLATE_FORMAT_UNSUPPORTED",
+                "PLATE_TEXT_UNRELIABLE",
+                "MULTIPLE_PLATES_AMBIGUOUS",
+            )
         )
     ):
         raise RepositoryError(

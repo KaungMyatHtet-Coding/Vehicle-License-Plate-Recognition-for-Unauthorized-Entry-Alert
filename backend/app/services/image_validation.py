@@ -15,9 +15,9 @@ from app.schemas.image import ImageValidationResponse
 
 ImageFile.LOAD_TRUNCATED_IMAGES = False
 
-SUPPORTED_IMAGES: dict[str, tuple[str, ...]] = {
-    "JPEG": ("image/jpeg", ".jpg", ".jpeg"),
-    "PNG": ("image/png", ".png"),
+SUPPORTED_IMAGES: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {
+    "JPEG": (("image/jpeg", "image/jpg"), (".jpg", ".jpeg")),
+    "PNG": (("image/png",), (".png",)),
 }
 
 
@@ -75,7 +75,7 @@ async def validate_image_upload(
             "Only JPEG and PNG images are supported.",
             415,
         )
-    if content_type not in {"image/jpeg", "image/png"}:
+    if content_type not in {"image/jpeg", "image/jpg", "image/png"}:
         _raise(
             "IMAGE_MIME_UNSUPPORTED", "Only JPEG and PNG MIME types are supported.", 415
         )
@@ -119,8 +119,8 @@ async def validate_image_upload(
             "The decoded image format is not supported.",
             415,
         )
-    expected_mime, *expected_extensions = format_rules
-    if content_type != expected_mime or extension not in expected_extensions:
+    expected_mimes, expected_extensions = format_rules
+    if content_type not in expected_mimes or extension not in expected_extensions:
         _raise(
             "IMAGE_CONTENT_MISMATCH",
             "The filename, MIME type, and decoded image format do not match.",

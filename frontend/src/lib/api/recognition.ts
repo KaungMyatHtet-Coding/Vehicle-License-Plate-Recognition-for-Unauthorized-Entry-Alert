@@ -124,7 +124,7 @@ function ocr(value: unknown): PlateOcrResponse {
     !["recognized", "manual_review"].includes(status) ||
     !["recognition_only", "full_pipeline"].includes(mode) ||
     (reviewReason !== null &&
-      !["OCR_EMPTY", "OCR_LOW_CONFIDENCE"].includes(reviewReason))
+      !["OCR_EMPTY", "OCR_LOW_CONFIDENCE", "PLATE_REGION_MISSING", "PLATE_FORMAT_UNSUPPORTED", "PLATE_TEXT_UNRELIABLE", "MULTIPLE_PLATES_AMBIGUOUS"].includes(reviewReason))
   ) {
     throw new Error("invalid OCR state");
   }
