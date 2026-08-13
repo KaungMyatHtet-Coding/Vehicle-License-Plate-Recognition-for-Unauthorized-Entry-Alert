@@ -38,16 +38,17 @@ export function DashboardView() {
   if (state.loading) return <LoadingState label="Loading server-derived statistics" />;
   if (state.error || !state.data) return <ErrorState message="Dashboard statistics could not be loaded." retry={state.retry} />;
   const data = state.data;
-  return <div className="space-y-6">
+  const metrics = [["Total", data.total_recognitions, "border-slate-500"], ["Authorized", data.authorized, "border-emerald-600"], ["Unauthorized", data.unauthorized, "border-red-600"], ["Manual review", data.manual_review, "border-amber-500"], ["No plate", data.no_plate, "border-slate-500"]] as const;
+  const maximum = Math.max(...data.trend.map((item) => item.total), 0);
+  return <div className="space-y-5">
     <p className="text-sm text-slate-600">All totals and daily trend boundaries are calculated by the backend in {data.timezone}.</p>
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-      {[["Total", data.total_recognitions], ["Authorized", data.authorized], ["Unauthorized", data.unauthorized], ["Manual review", data.manual_review], ["No plate", data.no_plate]].map(([label, value]) =>
-        <FoundationPanel key={label} title={String(label)} description={String(value)} />)}
+      {metrics.map(([label, value, accent]) => <section key={label} aria-label={`${label}: ${value}`} className={`rounded-xl border border-[var(--border)] border-l-4 ${accent} bg-white p-4 shadow-sm`}><p className="text-sm font-semibold text-slate-700">{label}</p><p className="mt-2 text-3xl font-bold tabular-nums text-slate-950">{value}</p></section>)}
     </div>
-    {data.total_recognitions === 0 ? <FoundationPanel title="No recognition activity" description="Process-local history is empty. Activity may be cleared when the backend restarts." /> :
-      <FoundationPanel title="Seven-day recognition trend" description="Daily authoritative outcomes; bars represent total activity.">
-        <ul className="mt-5 space-y-3">{data.trend.map((item) => <li key={item.bucket_start} className="grid grid-cols-[7rem_1fr_3rem] items-center gap-3"><span>{utc(item.bucket_start).split(",")[0]}</span><span className="h-3 rounded bg-teal-600" style={{ width: `${Math.max(4, Math.min(100, item.total * 10))}%` }} aria-label={`${item.total} recognitions`} /><strong>{item.total}</strong></li>)}</ul>
-      </FoundationPanel>}
+    <FoundationPanel title="Seven-day recognition trend" description="Bars are scaled to the highest daily count in the displayed UTC period; values are total activity, not category-specific counts.">
+      {maximum === 0 ? <p className="mt-5 rounded-md bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">No recognition activity during this period.</p> :
+        <ul className="mt-5 space-y-3">{data.trend.map((item) => { const width = item.total > 0 ? Math.max(2, (item.total / maximum) * 100) : 0; const date = utc(item.bucket_start).split(",")[0]; return <li key={item.bucket_start} aria-label={`${date}: ${item.total} recognitions`} className="grid grid-cols-[6.5rem_minmax(0,1fr)_2.5rem] items-center gap-3 text-sm"><span className="text-slate-700">{date}</span><span className="h-3 rounded bg-slate-100" aria-hidden="true"><span className="block h-3 rounded bg-teal-700" style={{ width: `${width}%` }} /></span><strong className="text-right tabular-nums text-slate-950">{item.total}</strong></li>; })}</ul>}
+    </FoundationPanel>
   </div>;
 }
 

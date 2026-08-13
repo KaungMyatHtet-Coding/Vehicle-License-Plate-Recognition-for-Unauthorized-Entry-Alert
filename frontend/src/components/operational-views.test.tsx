@@ -22,17 +22,33 @@ describe("Day 14 operational views", () => {
     expect(screen.getByRole("status").textContent).toContain("Loading server-derived statistics");
     expect(await screen.findByText("All totals and daily trend boundaries are calculated by the backend in UTC.")).toBeDefined();
     expect(screen.getByText("2", { selector: "p" })).toBeDefined();
+    for (const label of ["Total: 2", "Authorized: 0", "Unauthorized: 1", "Manual review: 0", "No plate: 1"]) {
+      expect(screen.getByRole("region", { name: label })).toBeDefined();
+    }
   });
 
   it("renders dashboard empty and failure states", async () => {
     vi.mocked(getStatistics).mockResolvedValueOnce({ ...stats, total_recognitions: 0, unauthorized: 0, no_plate: 0, trend: [] });
     const { unmount } = render(<DashboardView />);
-    expect(await screen.findByText("No recognition activity")).toBeDefined();
+    expect(await screen.findByText("No recognition activity during this period.")).toBeDefined();
     unmount();
     vi.mocked(getStatistics).mockRejectedValue(new Error("private provider detail"));
     render(<DashboardView />);
     expect((await screen.findByRole("alert")).textContent).toContain("Dashboard statistics could not be loaded");
     expect(screen.queryByText(/provider detail/i)).toBeNull();
+  });
+
+  it("renders proportional activity bars and leaves zero values unfilled", async () => {
+    vi.mocked(getStatistics).mockResolvedValue({ ...stats, total_recognitions: 4, trend: [
+      { bucket_start: "2026-08-01T00:00:00Z", authorized: 0, unauthorized: 0, manual_review: 0, no_plate: 0, total: 0 },
+      { bucket_start: "2026-08-02T00:00:00Z", authorized: 0, unauthorized: 2, manual_review: 0, no_plate: 0, total: 2 },
+      { bucket_start: "2026-08-03T00:00:00Z", authorized: 0, unauthorized: 4, manual_review: 0, no_plate: 0, total: 4 },
+    ] });
+    render(<DashboardView />);
+    expect(await screen.findByLabelText(/01 Aug 2026: 0 recognitions/)).toBeDefined();
+    expect((screen.getByLabelText(/01 Aug 2026: 0 recognitions/).querySelector("span[aria-hidden='true'] > span") as HTMLElement).style.width).toBe("0%");
+    expect((screen.getByLabelText(/02 Aug 2026: 2 recognitions/).querySelector("span[aria-hidden='true'] > span") as HTMLElement).style.width).toBe("50%");
+    expect((screen.getByLabelText(/03 Aug 2026: 4 recognitions/).querySelector("span[aria-hidden='true'] > span") as HTMLElement).style.width).toBe("100%");
   });
 
   it("renders, filters, paginates, and shows restricted history detail", async () => {
