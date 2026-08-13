@@ -149,12 +149,16 @@ def test_statistics_totals_no_plate_and_utc_bucket_boundaries() -> None:
 
 def test_alerts_are_backend_selected_and_paginated() -> None:
     result = service(
-        record(), record(decision="AUTHORIZED", reason="ACTIVE_MATCH")
-    ).alerts(page=1, page_size=1)
-    assert result.total_items == 1
-    assert result.items[0].decision == "UNAUTHORIZED"
-    assert result.items[0].alert_type == "ENTRY_NOT_AUTHORIZED"
-    assert "driver" not in result.items[0].message.lower()
+        record(),
+        record(decision="MANUAL_REVIEW", reason="PLATE_REGION_MISSING"),
+        record(decision="AUTHORIZED", reason="ACTIVE_MATCH"),
+    ).alerts(page=1, page_size=10)
+    assert result.total_items == 2
+    assert {item.decision for item in result.items} == {"UNAUTHORIZED", "MANUAL_REVIEW"}
+    by_decision = {item.decision: item for item in result.items}
+    assert by_decision["UNAUTHORIZED"].alert_type == "ENTRY_NOT_AUTHORIZED"
+    assert by_decision["MANUAL_REVIEW"].alert_type == "MANUAL_REVIEW"
+    assert "driver" not in by_decision["UNAUTHORIZED"].message.lower()
 
 
 @pytest.mark.parametrize(

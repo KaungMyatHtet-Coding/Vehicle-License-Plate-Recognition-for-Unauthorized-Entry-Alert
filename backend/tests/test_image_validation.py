@@ -123,3 +123,27 @@ def test_dimensions_outside_limits_are_rejected(
 
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "IMAGE_DIMENSIONS_UNSUPPORTED"
+
+
+@pytest.mark.parametrize("mode", ["L", "CMYK"])
+def test_genuine_jpeg_modes_are_supported(mode: str) -> None:
+    stream = BytesIO()
+    color = 128 if mode == "L" else (12, 34, 56, 0)
+    Image.new(mode, (64, 48), color=color).save(stream, format="JPEG")
+    response = client.post(
+        "/api/recognition/validate-image",
+        files={"file": ("vehicle.jpg", stream.getvalue(), "image/jpg")},
+    )
+    assert response.status_code == 200
+    assert response.json()["detected_format"] == "JPEG"
+
+
+def test_renamed_webp_is_rejected_by_decoded_format() -> None:
+    stream = BytesIO()
+    Image.new("RGB", (64, 48), color=(12, 34, 56)).save(stream, format="WEBP")
+    response = client.post(
+        "/api/recognition/validate-image",
+        files={"file": ("vehicle.jpg", stream.getvalue(), "image/jpeg")},
+    )
+    assert response.status_code == 415
+    assert response.json()["error"]["code"] == "IMAGE_FORMAT_UNSUPPORTED"

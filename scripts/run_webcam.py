@@ -323,7 +323,12 @@ class WebcamRunner:
             try:
                 capture.release()
             finally:
-                cv2.destroyAllWindows()
+                try:
+                    cv2.destroyAllWindows()
+                except cv2.error:
+                    # Headless OpenCV builds may not provide a GUI backend;
+                    # camera release has already completed safely.
+                    logger.debug("OpenCV GUI cleanup is unavailable.")
 
 
 def _positive_float(value: str) -> float:

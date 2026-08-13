@@ -12,7 +12,17 @@ class PlateOcrResponse(BaseModel):
 
     correlation_id: str
     status: Literal["recognized", "manual_review"]
-    review_reason: Literal["OCR_EMPTY", "OCR_LOW_CONFIDENCE"] | None
+    review_reason: (
+        Literal[
+            "OCR_EMPTY",
+            "OCR_LOW_CONFIDENCE",
+            "PLATE_REGION_MISSING",
+            "PLATE_FORMAT_UNSUPPORTED",
+            "PLATE_TEXT_UNRELIABLE",
+            "MULTIPLE_PLATES_AMBIGUOUS",
+        ]
+        | None
+    )
     raw_text: str
     normalized_text: str
     confidence: float | None

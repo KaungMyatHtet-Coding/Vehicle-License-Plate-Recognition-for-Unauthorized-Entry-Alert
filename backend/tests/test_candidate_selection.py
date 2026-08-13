@@ -95,13 +95,14 @@ class FakeDecision:
     def decide(self, ocr: PlateOcrResponse) -> EntryDecision:
         self.calls.append(ocr.normalized_text)
         authorized = ocr.status == "recognized"
+        reason = ocr.review_reason or "OCR_LOW_CONFIDENCE"
         return EntryDecision(
             correlation_id=ocr.correlation_id,
             decision="AUTHORIZED" if authorized else "MANUAL_REVIEW",
-            reason="ACTIVE_MATCH" if authorized else "OCR_LOW_CONFIDENCE",
+            reason="ACTIVE_MATCH" if authorized else reason,
             message="The vehicle record permits entry at this time."
             if authorized
-            else "Plate text confidence is too low; manual review is required.",
+            else "Manual review is required.",
             normalized_plate=ocr.normalized_text,
             confidence=ocr.confidence,
             vehicle_id=None,
@@ -205,6 +206,36 @@ def test_watermark_and_unsupported_or_numeric_free_text_are_manual_review() -> N
         assert result.decision.decision == "MANUAL_REVIEW"
 
 
+def test_valid_region_plate_outranks_alphabetic_watermark() -> None:
+    watermark = candidate("watermark", confidence=0.99, bbox=(10, 10, 170, 50))
+    plate = candidate("plate", confidence=0.85, bbox=(300, 10, 460, 50))
+    instance, _, _, _ = service(
+        [watermark, plate],
+        {"watermark": ("ALAMY", 0.99), "plate": ("YGN 3K-3709", 0.85)},
+    )
+
+    result = instance.analyze(b"image", CORRELATION_ID)
+
+    assert result.ocr is not None
+    assert result.ocr.normalized_text == "YGN3K3709"
+    assert result.decision is not None
+    assert result.decision.decision == "AUTHORIZED"
+    assert "ALAMY" not in repr(result)
+
+
+def test_numeric_partial_without_region_stays_manual_with_truthful_reason() -> None:
+    item = candidate("partial", confidence=0.99, bbox=(10, 10, 170, 50))
+    instance, _, _, _ = service([item], {"partial": ("5D-3062", 0.99)})
+
+    result = instance.analyze(b"image", CORRELATION_ID)
+
+    assert result.ocr is not None
+    assert result.ocr.review_reason == "PLATE_REGION_MISSING"
+    assert result.decision is not None
+    assert result.decision.decision == "MANUAL_REVIEW"
+    assert result.decision.reason == "PLATE_REGION_MISSING"
+
+
 def test_supported_regions_and_separators_remain_reliable() -> None:
     for text in ("YGN 5A-1234", "MDY 3B-5678", "NPT 2D-3456"):
         item = candidate("candidate", confidence=0.99, bbox=(10, 10, 170, 50))
@@ -244,7 +275,11 @@ def test_distinct_reliable_candidates_remain_manual_review_even_when_scores_diff
     assert result_a.decision.decision == "MANUAL_REVIEW"
     assert result_b.decision is not None
     assert result_b.decision.decision == "MANUAL_REVIEW"
-    assert result_a.decision.reason == result_b.decision.reason == "OCR_LOW_CONFIDENCE"
+    assert (
+        result_a.decision.reason
+        == result_b.decision.reason
+        == "MULTIPLE_PLATES_AMBIGUOUS"
+    )
     assert "first" not in result_a.__repr__()
     assert "second" not in result_a.__repr__()
 

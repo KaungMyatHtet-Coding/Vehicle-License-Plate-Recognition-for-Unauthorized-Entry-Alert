@@ -12,6 +12,9 @@ from datetime import datetime, timezone
 from typing import Protocol
 from uuid import UUID
 
+import cv2
+import numpy as np
+
 from app.schemas.detection import ImageDetectionResponse
 from app.repositories.contracts import RecognitionActivityRepository
 from app.schemas.recognition import (
@@ -21,7 +24,7 @@ from app.schemas.recognition import (
 )
 from app.services.detection_logging import DetectionLoggingService
 from app.services.ocr_recognition import PlateOcrService
-from app.services.ocr_recognition import is_plate_grammar_reliable
+from app.services.ocr_recognition import is_plate_grammar_reliable, plate_review_reason
 from app.services.plate_detection import PlateDetectionService
 from app.services.authorization_decision import AuthorizationDecisionService
 
@@ -66,6 +69,8 @@ class RecognitionOrchestrationError(RuntimeError):
 
 class RecognitionOrchestrationService:
     """Run one validated image through Days 5–11 without changing their rules."""
+
+    _OCR_CROP_PADDING_RATIO = 1.0
 
     def __init__(
         self,
@@ -193,6 +198,7 @@ class RecognitionOrchestrationService:
                 "Plate detection returned an invalid result.",
             )
         settings = self._settings
+        source_image = self._decode_source_image(image_bytes)
         max_candidates = getattr(settings, "max_recognition_candidates", 3)
         candidates = sorted(
             detection.detections,
@@ -201,13 +207,7 @@ class RecognitionOrchestrationService:
         evaluations: list[_CandidateEvaluation] = []
         ocr_started = time.perf_counter()
         for candidate in candidates:
-            try:
-                crop_bytes = base64.b64decode(candidate.crop.base64_data, validate=True)
-            except (ValueError, binascii.Error) as exc:
-                raise RecognitionOrchestrationError(
-                    "DETECTION_CROP_INVALID",
-                    "The detected plate crop could not be processed.",
-                ) from exc
+            crop_bytes = self._ocr_crop_bytes(candidate, source_image)
             candidate_ocr = self._ocr.recognize(crop_bytes, correlation_id)
             grammar_ok = is_plate_grammar_reliable(
                 candidate_ocr.normalized_text,
@@ -226,10 +226,23 @@ class RecognitionOrchestrationService:
                 candidate, candidate_ocr, grammar_ok, detection
             )
             if not reliable:
+                reason = (
+                    plate_review_reason(
+                        candidate_ocr.normalized_text,
+                        candidate_ocr.confidence,
+                        getattr(
+                            settings, "supported_plate_regions", ["YGN", "MDY", "NPT"]
+                        ),
+                        getattr(settings, "min_plate_length", 7),
+                        getattr(settings, "max_plate_length", 12),
+                        getattr(settings, "ocr_min_confidence", 0.80),
+                    )
+                    or "PLATE_TEXT_UNRELIABLE"
+                )
                 candidate_ocr = candidate_ocr.model_copy(
                     update={
                         "status": "manual_review",
-                        "review_reason": "OCR_LOW_CONFIDENCE",
+                        "review_reason": reason,
                     }
                 )
             evaluations.append(
@@ -256,7 +269,9 @@ class RecognitionOrchestrationService:
                 selected_eval.ocr.model_copy(
                     update={
                         "status": "manual_review",
-                        "review_reason": "OCR_LOW_CONFIDENCE",
+                        "review_reason": "MULTIPLE_PLATES_AMBIGUOUS"
+                        if distinct_reliable_plates
+                        else "PLATE_TEXT_UNRELIABLE",
                     }
                 ),
                 selected_eval.score,
@@ -271,6 +286,46 @@ class RecognitionOrchestrationService:
             detection.total_ms,
             ocr_ms,
         )
+
+    @staticmethod
+    def _decode_source_image(image_bytes: bytes) -> np.ndarray | None:
+        """Decode the already validated source once for bounded OCR padding."""
+
+        try:
+            return cv2.imdecode(
+                np.frombuffer(image_bytes, dtype=np.uint8), cv2.IMREAD_COLOR
+            )
+        except (ValueError, cv2.error):
+            return None
+
+    @classmethod
+    def _ocr_crop_bytes(
+        cls, candidate: object, source_image: np.ndarray | None
+    ) -> bytes:
+        """Use a bounded padded crop for OCR while preserving the public bbox."""
+
+        if source_image is not None:
+            bbox = candidate.bbox
+            width = bbox.x2 - bbox.x1
+            height = bbox.y2 - bbox.y1
+            if width > 0 and height > 0:
+                padding_x = int(width * cls._OCR_CROP_PADDING_RATIO)
+                padding_y = int(height * cls._OCR_CROP_PADDING_RATIO)
+                x1 = max(0, bbox.x1 - padding_x)
+                y1 = max(0, bbox.y1 - padding_y)
+                x2 = min(source_image.shape[1], bbox.x2 + padding_x)
+                y2 = min(source_image.shape[0], bbox.y2 + padding_y)
+                padded = source_image[y1:y2, x1:x2]
+                success, encoded = cv2.imencode(".png", padded)
+                if success:
+                    return encoded.tobytes()
+        try:
+            return base64.b64decode(candidate.crop.base64_data, validate=True)
+        except (ValueError, binascii.Error) as exc:
+            raise RecognitionOrchestrationError(
+                "DETECTION_CROP_INVALID",
+                "The detected plate crop could not be processed.",
+            ) from exc
 
     @staticmethod
     def _candidate_order_key(

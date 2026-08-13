@@ -17,6 +17,7 @@ const REASONS = new Set([
   "DECISION_TIME_INVALID", "VEHICLE_NOT_FOUND", "VEHICLE_INACTIVE",
   "VEHICLE_BLOCKED", "VEHICLE_NOT_YET_VALID", "VEHICLE_EXPIRED",
   "VEHICLE_RECORD_INVALID", "VEHICLE_LOOKUP_FAILED",
+  "PLATE_REGION_MISSING", "PLATE_FORMAT_UNSUPPORTED", "PLATE_TEXT_UNRELIABLE", "MULTIPLE_PLATES_AMBIGUOUS",
 ]);
 
 function object(value: unknown): Record<string, unknown> {
@@ -84,8 +85,10 @@ export function parseAlerts(value: unknown): PaginatedAlerts {
   const items = item.items.map((value): AlertSummary => {
     const alert = object(value);
     const base = summary(Object.fromEntries(Object.entries(alert).filter(([key]) => !["alert_type", "message"].includes(key))));
-    if (alert.alert_type !== "ENTRY_NOT_AUTHORIZED" || base.decision !== "UNAUTHORIZED") throw new Error("invalid alert");
-    return { ...base, alert_type: "ENTRY_NOT_AUTHORIZED", message: string(alert.message) };
+    if (!["ENTRY_NOT_AUTHORIZED", "MANUAL_REVIEW"].includes(String(alert.alert_type))) throw new Error("invalid alert");
+    if (alert.alert_type === "ENTRY_NOT_AUTHORIZED" && base.decision !== "UNAUTHORIZED") throw new Error("invalid alert");
+    if (alert.alert_type === "MANUAL_REVIEW" && base.decision !== "MANUAL_REVIEW") throw new Error("invalid alert");
+    return { ...base, alert_type: alert.alert_type as AlertSummary["alert_type"], message: string(alert.message) };
   });
   return { items, page: integer(item.page), page_size: integer(item.page_size), total_items: integer(item.total_items), total_pages: integer(item.total_pages), timezone: "UTC" };
 }

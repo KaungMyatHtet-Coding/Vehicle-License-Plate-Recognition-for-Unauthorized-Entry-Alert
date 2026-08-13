@@ -180,6 +180,23 @@ def test_orchestration_preserves_authoritative_decision_and_evidence() -> None:
     assert result.timings.detection_ms == 2.0
 
 
+def test_ocr_crop_padding_is_bounded_and_preserves_public_bbox() -> None:
+    source = np.zeros((64, 96, 3), dtype=np.uint8)
+    candidate = detection().detections[0]
+
+    encoded = RecognitionOrchestrationService._ocr_crop_bytes(candidate, source)
+    decoded = cv2.imdecode(np.frombuffer(encoded, dtype=np.uint8), cv2.IMREAD_COLOR)
+
+    assert decoded is not None
+    assert decoded.shape[:2] == (60, 96)
+    assert candidate.bbox.model_dump() == {
+        "x1": 10,
+        "y1": 20,
+        "x2": 70,
+        "y2": 40,
+    }
+
+
 def test_no_plate_stops_before_ocr_decision_and_logging() -> None:
     fake_ocr = FakeOcr()
     orchestrator = RecognitionOrchestrationService(

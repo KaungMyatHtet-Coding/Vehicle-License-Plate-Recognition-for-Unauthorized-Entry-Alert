@@ -13,7 +13,7 @@ export default function AlertsPage() {
       <PageHeader
         eyebrow="Review queue"
         title="Alerts"
-        description="Backend-selected unauthorized outcomes for non-accusatory operator review."
+        description="Backend-selected unauthorized and manual-review outcomes for non-accusatory operator review."
       />
       <AlertsView />
     </div>

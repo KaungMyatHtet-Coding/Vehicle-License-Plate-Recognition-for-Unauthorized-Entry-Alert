@@ -122,6 +122,18 @@ def test_reliable_primary_returns_raw_normalized_text_and_confidence() -> None:
     assert engine.modes == ["recognition_only"]
 
 
+def test_region_and_body_on_separate_ocr_lines_are_reconstructed() -> None:
+    service, _ = service_with(
+        [EngineOcrResult("MDY\n5D-3062", 0.96, 2.5, "recognition_only")]
+    )
+
+    result = service.recognize(image_bytes(), "correlation")
+
+    assert result.status == "recognized"
+    assert result.normalized_text == "MDY5D3062"
+    assert result.raw_text == "MDY\n5D-3062"
+
+
 def test_empty_primary_uses_day7_full_pipeline_fallback() -> None:
     service, engine = service_with(
         [

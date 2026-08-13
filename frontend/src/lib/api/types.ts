@@ -57,7 +57,7 @@ export interface ImageDetectionResponse {
 }
 
 export type OcrStatus = "recognized" | "manual_review";
-export type OcrReviewReason = "OCR_EMPTY" | "OCR_LOW_CONFIDENCE";
+export type OcrReviewReason = "OCR_EMPTY" | "OCR_LOW_CONFIDENCE" | "PLATE_REGION_MISSING" | "PLATE_FORMAT_UNSUPPORTED" | "PLATE_TEXT_UNRELIABLE" | "MULTIPLE_PLATES_AMBIGUOUS";
 
 export interface PlateOcrResponse {
   readonly correlation_id: string;
@@ -83,6 +83,10 @@ export type DecisionReason =
   | "OCR_EMPTY"
   | "OCR_LOW_CONFIDENCE"
   | "OCR_RESULT_INVALID"
+  | "PLATE_REGION_MISSING"
+  | "PLATE_FORMAT_UNSUPPORTED"
+  | "PLATE_TEXT_UNRELIABLE"
+  | "MULTIPLE_PLATES_AMBIGUOUS"
   | "DECISION_TIME_INVALID"
   | "VEHICLE_NOT_FOUND"
   | "VEHICLE_INACTIVE"
@@ -170,7 +174,7 @@ export interface DashboardStatistics {
 }
 
 export interface AlertSummary extends DetectionSummary {
-  readonly alert_type: "ENTRY_NOT_AUTHORIZED";
+  readonly alert_type: "ENTRY_NOT_AUTHORIZED" | "MANUAL_REVIEW";
   readonly message: string;
 }
 
