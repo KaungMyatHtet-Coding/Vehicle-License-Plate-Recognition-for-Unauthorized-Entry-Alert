@@ -8,6 +8,16 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("AppShell", () => {
+  it("uses an accessible compact CVPX wordmark without Local-first branding", () => {
+    render(<AppShell><p>Page content</p></AppShell>);
+    expect(screen.getByText("CVPX")).toBeDefined();
+    expect(screen.getByText("Vehicle security")).toBeDefined();
+    expect(screen.queryByText("Local-first")).toBeNull();
+    expect(screen.getByText("WORKFLOW")).toBeDefined();
+    expect(screen.getByText("OPERATIONS")).toBeDefined();
+    expect(screen.getByText("CVPX").parentElement?.previousElementSibling?.querySelector("svg")).toBeTruthy();
+  });
+
   it("provides accessible navigation for every Day 12 route", () => {
     render(
       <AppShell>
@@ -49,5 +59,9 @@ describe("AppShell", () => {
     expect(screen.getByRole("main").getAttribute("id")).toBe(
       "main-content",
     );
+    expect(screen.getByRole("heading", { name: "Vehicle License Plate Recognition for Unauthorized Entry Alert" })).toBeDefined();
+    for (const link of navigation.querySelectorAll("a")) {
+      expect(link.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+    }
   });
 });
